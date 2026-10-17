@@ -35,5 +35,9 @@ android {
 
 dependencies {
     implementation("com.wireguard.android:tunnel:1.0.20250531")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("androidx.webkit:webkit:1.14.0")
+
+    coreLibraryDesugaring(
+        "com.android.tools:desugar_jdk_libs:2.1.5"
+    )
 }
