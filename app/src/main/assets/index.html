@@ -1,726 +1,792 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-    >
-    <meta name="theme-color" content="#080d18">
-    <title>WOODE VPN</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>ود فيصل V3</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050914;
+      --panel: rgba(10, 21, 42, .86);
+      --panel-2: rgba(15, 31, 58, .84);
+      --line: rgba(101, 163, 255, .19);
+      --blue: #168cff;
+      --blue2: #52c7ff;
+      --gold: #f2c66d;
+      --text: #f4f7ff;
+      --muted: #9aaccb;
+      --green: #40e0b0;
+      --red: #ff6e88;
+      --yellow: #ffd16d;
+    }
 
-    <style>
-        :root {
-            color-scheme: dark;
-            --background: #080d18;
-            --surface: #111a2b;
-            --surface-light: #17243a;
-            --primary: #4388ff;
-            --primary-light: #72aaff;
-            --text: #f3f6ff;
-            --muted: #9aa9c2;
-            --border: rgba(160, 185, 225, 0.13);
-            --green: #32d6a0;
-            --red: #ff687d;
-            --yellow: #ffd166;
-        }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background:
-                radial-gradient(
-                    ellipse at 50% 0%,
-                    rgba(48, 109, 220, 0.17),
-                    transparent 55%
-                ),
-                var(--background);
-            color: var(--text);
-            font-family: Arial, "Noto Sans Arabic", sans-serif;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Noto Sans Arabic", Arial, sans-serif;
+      background:
+        radial-gradient(ellipse at 50% -5%, rgba(0, 112, 255, .28), transparent 43%),
+        radial-gradient(ellipse at 100% 44%, rgba(0, 160, 255, .10), transparent 34%),
+        radial-gradient(ellipse at 0% 80%, rgba(8, 86, 220, .12), transparent 38%),
+        linear-gradient(155deg, #050914 0%, #071329 48%, #030711 100%);
+      background-attachment: fixed;
+    }
 
-        button {
-            font: inherit;
-            cursor: pointer;
-        }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .24;
+      background-image:
+        linear-gradient(rgba(70,145,255,.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70,145,255,.075) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, #000, transparent 78%);
+    }
 
-        .app {
-            width: 100%;
-            max-width: 480px;
-            min-height: 100vh;
-            margin: 0 auto;
-            padding: 25px 19px 18px;
-            display: flex;
-            flex-direction: column;
-        }
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
 
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
+    button:disabled {
+      opacity: .42;
+      cursor: default;
+    }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-        }
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 490px);
+      min-height: 100vh;
+      margin: auto;
+      padding: max(22px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+    }
 
-        .brand-icon {
-            width: 47px;
-            height: 47px;
-            display: grid;
-            place-items: center;
-            border: 1px solid rgba(91, 151, 255, 0.38);
-            border-radius: 15px;
-            background: linear-gradient(
-                145deg,
-                rgba(67, 136, 255, 0.25),
-                rgba(67, 136, 255, 0.05)
-            );
-            color: var(--primary-light);
-        }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
 
-        .brand-icon svg {
-            width: 27px;
-            height: 27px;
-        }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
 
-        .brand-name {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 800;
-            letter-spacing: 0.7px;
-        }
+    .brand-mark {
+      width: 50px;
+      height: 50px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      border: 1px solid rgba(85,178,255,.46);
+      background: linear-gradient(145deg, rgba(20,125,255,.32), rgba(8,22,48,.92));
+      box-shadow: inset 0 0 18px rgba(42,139,255,.12), 0 0 24px rgba(0,110,255,.13);
+    }
 
-        .brand-subtitle {
-            margin: 5px 0 0;
-            color: var(--muted);
-            font-size: 11px;
-        }
+    .brand-mark svg {
+      width: 30px;
+      height: 30px;
+    }
 
-        .version {
-            padding: 7px 10px;
-            color: #b7c8e5;
-            background: rgba(160, 185, 225, 0.07);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            font-size: 11px;
-            direction: ltr;
-        }
+    .brand-name {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .1px;
+    }
 
-        .intro {
-            margin-top: 37px;
-        }
+    .brand-subtitle {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
 
-        .eyebrow {
-            color: var(--primary-light);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
+    .version {
+      padding: 7px 10px;
+      border-radius: 30px;
+      background: rgba(242,198,109,.08);
+      border: 1px solid rgba(242,198,109,.25);
+      color: var(--gold);
+      font-size: 10px;
+      letter-spacing: .65px;
+      white-space: nowrap;
+      direction: ltr;
+    }
 
-        h1 {
-            margin: 11px 0 9px;
-            font-size: 29px;
-            line-height: 1.5;
-            font-weight: 800;
-        }
+    .hero {
+      margin-top: 29px;
+    }
 
-        .description {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.9;
-        }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--blue2);
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: .3px;
+    }
 
-        .connection-card {
-            position: relative;
-            overflow: hidden;
-            margin-top: 26px;
-            padding: 24px 20px 21px;
-            text-align: center;
-            background: linear-gradient(
-                155deg,
-                rgba(24, 39, 63, 0.97),
-                rgba(15, 24, 40, 0.98)
-            );
-            border: 1px solid var(--border);
-            border-radius: 25px;
-        }
+    .eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--gold);
+    }
 
-        .connection-card::before {
-            content: "";
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            top: -120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(67, 136, 255, 0.12);
-            filter: blur(35px);
-            pointer-events: none;
-        }
+    h1 {
+      margin: 9px 0 7px;
+      font-size: clamp(25px, 7vw, 31px);
+      line-height: 1.45;
+      font-weight: 900;
+    }
 
-        .status-pill {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.035);
-            color: #c2cde0;
-            font-size: 12px;
-        }
+    .hero p {
+      margin: 0;
+      max-width: 350px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.9;
+    }
 
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--yellow);
-        }
+    .connect-card {
+      position: relative;
+      overflow: hidden;
+      margin-top: 22px;
+      padding: 21px 18px 20px;
+      text-align: center;
+      border: 1px solid rgba(93,155,248,.24);
+      border-radius: 27px;
+      background: linear-gradient(145deg, rgba(12,29,57,.91), rgba(5,13,29,.95));
+      box-shadow: 0 18px 54px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.035);
+    }
 
-        .status-pill.connected {
-            color: var(--green);
-            border-color: rgba(50, 214, 160, 0.25);
-            background: rgba(50, 214, 160, 0.07);
-        }
+    .connect-card::before {
+      content: "";
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      top: -152px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #087dff;
+      filter: blur(70px);
+      opacity: .23;
+      pointer-events: none;
+    }
 
-        .status-pill.connected .status-dot {
-            background: var(--green);
-            box-shadow: 0 0 10px rgba(50, 214, 160, 0.65);
-        }
+    .connect-card::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 1px;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, var(--blue), var(--gold), transparent);
+      opacity: .7;
+    }
 
-        .status-pill.error {
-            color: var(--red);
-            border-color: rgba(255, 104, 125, 0.25);
-        }
+    .status-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255,255,255,.035);
+      color: #c3d0e7;
+      font-size: 11px;
+    }
 
-        .status-pill.error .status-dot {
-            background: var(--red);
-        }
+    .dot {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 11px rgba(255,209,109,.35);
+    }
 
-        .status-pill.loading .status-dot {
-            background: var(--primary-light);
-            animation: pulse 1s infinite alternate;
-        }
+    .status-pill.connected {
+      color: var(--green);
+      border-color: rgba(64,224,176,.3);
+      background: rgba(64,224,176,.07);
+    }
 
-        @keyframes pulse {
-            from { opacity: 0.35; }
-            to { opacity: 1; }
-        }
+    .status-pill.connected .dot {
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(64,224,176,.7);
+    }
 
-        .shield-wrap {
-            position: relative;
-            width: 142px;
-            height: 142px;
-            margin: 25px auto 20px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            border: 1px solid rgba(95, 151, 255, 0.17);
-            background: radial-gradient(
-                circle,
-                rgba(67, 136, 255, 0.12),
-                rgba(67, 136, 255, 0.025) 68%
-            );
-        }
+    .status-pill.error {
+      color: var(--red);
+      border-color: rgba(255,110,136,.28);
+    }
 
-        .shield-inner {
-            width: 103px;
-            height: 103px;
-            display: grid;
-            place-items: center;
-            border: 1px solid rgba(96, 157, 255, 0.35);
-            border-radius: 30px;
-            background: linear-gradient(
-                145deg,
-                #1c3c70,
-                #10213d
-            );
-            box-shadow: 0 0 35px rgba(39, 112, 243, 0.15);
-            color: var(--primary-light);
-            transition: 0.25s ease;
-        }
+    .status-pill.error .dot {
+      background: var(--red);
+    }
 
-        .shield-inner svg {
-            width: 53px;
-            height: 53px;
-        }
+    .status-pill.loading .dot {
+      background: var(--blue2);
+      animation: pulse .8s ease-in-out infinite alternate;
+    }
 
-        .shield-inner.connected {
-            color: var(--green);
-            border-color: rgba(50, 214, 160, 0.45);
-            background: linear-gradient(145deg, #174a48, #102b35);
-        }
+    @keyframes pulse {
+      from {
+        opacity: .35;
+        transform: scale(.85);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1.15);
+      }
+    }
 
-        .connection-title {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 700;
-        }
+    .orbit {
+      position: relative;
+      width: 151px;
+      height: 151px;
+      display: grid;
+      place-items: center;
+      margin: 19px auto 17px;
+      border-radius: 50%;
+      border: 1px solid rgba(76,159,255,.22);
+      background: radial-gradient(circle, rgba(7,107,255,.14), rgba(7,107,255,.015) 68%);
+    }
 
-        .connection-message {
-            max-width: 300px;
-            min-height: 43px;
-            margin: 9px auto 0;
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.8;
-            overflow-wrap: anywhere;
-        }
+    .orbit::before,
+    .orbit::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border-radius: 50%;
+      border: 1px dashed rgba(75,153,255,.26);
+      animation: rotate 26s linear infinite;
+    }
 
-        .section-heading {
-            margin: 25px 0 12px;
-            font-size: 14px;
-            font-weight: 700;
-        }
+    .orbit::after {
+      inset: 18px;
+      border-style: solid;
+      border-color: rgba(242,198,109,.14);
+      animation-direction: reverse;
+      animation-duration: 34s;
+    }
 
-        .config-card {
-            display: flex;
-            align-items: center;
-            gap: 13px;
-            padding: 15px;
-            border: 1px solid var(--border);
-            border-radius: 17px;
-            background: var(--surface);
-        }
+    @keyframes rotate {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-        .config-icon {
-            width: 43px;
-            height: 43px;
-            flex-shrink: 0;
-            display: grid;
-            place-items: center;
-            border-radius: 13px;
-            color: var(--primary-light);
-            background: rgba(67, 136, 255, 0.12);
-        }
+    .shield {
+      position: relative;
+      z-index: 1;
+      width: 102px;
+      height: 102px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(79,167,255,.5);
+      border-radius: 31px;
+      color: #73caff;
+      background: linear-gradient(145deg, #11366b, #09162f 78%);
+      box-shadow: 0 0 35px rgba(0,119,255,.2), inset 0 0 22px rgba(36,137,255,.13);
+      transition: .25s ease;
+    }
 
-        .config-icon svg {
-            width: 22px;
-            height: 22px;
-        }
+    .shield svg {
+      width: 52px;
+      height: 52px;
+    }
 
-        .config-info {
-            flex: 1;
-            min-width: 0;
-        }
+    .shield.connected {
+      color: var(--green);
+      border-color: rgba(64,224,176,.48);
+      background: linear-gradient(145deg, #14524c, #071d2a);
+      box-shadow: 0 0 35px rgba(64,224,176,.16);
+    }
 
-        .config-title {
-            margin: 0;
-            font-size: 13px;
-            font-weight: 700;
-        }
+    .connection-title {
+      position: relative;
+      margin: 0;
+      font-size: 19px;
+      font-weight: 850;
+    }
 
-        .config-description {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 11px;
-            line-height: 1.7;
-            overflow-wrap: anywhere;
-        }
+    .message {
+      position: relative;
+      min-height: 42px;
+      max-width: 320px;
+      margin: 8px auto 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.9;
+      overflow-wrap: anywhere;
+    }
 
-        .choose-button {
-            padding: 9px 11px;
-            flex-shrink: 0;
-            border: 1px solid rgba(91, 151, 255, 0.32);
-            border-radius: 11px;
-            background: rgba(67, 136, 255, 0.09);
-            color: var(--primary-light);
-            font-size: 11px;
-            font-weight: 700;
-        }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 22px 2px 11px;
+      font-size: 13px;
+      font-weight: 800;
+    }
 
-        .actions {
-            display: grid;
-            gap: 11px;
-            margin-top: 18px;
-        }
+    .section-title span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+    }
 
-        .connect-button {
-            min-height: 54px;
-            border: 0;
-            border-radius: 15px;
-            background: linear-gradient(105deg, #3476ef, #529aff);
-            color: white;
-            font-size: 15px;
-            font-weight: 800;
-            box-shadow: 0 9px 25px rgba(48, 111, 233, 0.19);
-            transition: transform 0.15s ease, opacity 0.15s ease;
-        }
+    .config-card {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 14px 13px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+    }
 
-        .connect-button:active,
-        .disconnect-button:active {
-            transform: scale(0.985);
-        }
+    .file-icon {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      flex: 0 0 auto;
+      border-radius: 14px;
+      border: 1px solid rgba(65,151,255,.16);
+      color: #76bdff;
+      background: rgba(31,117,255,.12);
+    }
 
-        .disconnect-button {
-            min-height: 48px;
-            border: 1px solid var(--border);
-            border-radius: 15px;
-            background: var(--surface-light);
-            color: #d6e0f1;
-            font-size: 14px;
-            font-weight: 700;
-        }
+    .file-icon svg {
+      width: 22px;
+      height: 22px;
+    }
 
-        button:disabled {
-            opacity: 0.42;
-            cursor: default;
-        }
+    .config-info {
+      min-width: 0;
+      flex: 1;
+      text-align: right;
+    }
 
-        .notice {
-            margin-top: 19px;
-            padding: 13px 14px;
-            border: 1px solid rgba(255, 209, 102, 0.15);
-            border-radius: 13px;
-            background: rgba(255, 209, 102, 0.045);
-            color: #c4b99b;
-            font-size: 11px;
-            line-height: 1.9;
-        }
+    .config-name {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 800;
+    }
 
-        .notice strong {
-            color: var(--yellow);
-        }
+    .config-desc {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
 
-        .footer {
-            margin-top: auto;
-            padding-top: 26px;
-            text-align: center;
-            color: #64738c;
-            font-size: 10px;
-            line-height: 1.9;
-        }
+    .choose {
+      padding: 9px 11px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(80,165,255,.34);
+      border-radius: 11px;
+      color: #a2d6ff;
+      background: rgba(22,140,255,.11);
+      font-size: 10px;
+      font-weight: 800;
+    }
 
-        @media (max-height: 760px) {
-            .app {
-                padding-top: 18px;
-            }
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
 
-            .intro {
-                margin-top: 25px;
-            }
+    .connect-btn {
+      min-height: 53px;
+      border: 1px solid rgba(130,194,255,.36);
+      border-radius: 15px;
+      color: white;
+      background: linear-gradient(100deg, #086fe8, #168cff 58%, #36b8ff);
+      box-shadow: 0 9px 25px rgba(0,111,255,.18), inset 0 1px 0 rgba(255,255,255,.15);
+      font-size: 14px;
+      font-weight: 900;
+    }
 
-            .connection-card {
-                margin-top: 18px;
-                padding-top: 18px;
-            }
+    .disconnect-btn {
+      min-height: 47px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      color: #d4e0f5;
+      background: rgba(17,34,61,.88);
+      font-size: 12px;
+      font-weight: 750;
+    }
 
-            .shield-wrap {
-                width: 115px;
-                height: 115px;
-                margin: 17px auto;
-            }
+    .connect-btn:active,
+    .disconnect-btn:active,
+    .choose:active {
+      transform: scale(.99);
+    }
 
-            .shield-inner {
-                width: 83px;
-                height: 83px;
-                border-radius: 25px;
-            }
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 16px;
+      padding: 12px 13px;
+      border: 1px solid rgba(242,198,109,.18);
+      border-radius: 15px;
+      background: rgba(242,198,109,.045);
+      color: #b8c4da;
+      font-size: 10px;
+      line-height: 1.9;
+    }
 
-            .shield-inner svg {
-                width: 44px;
-                height: 44px;
-            }
-        }
-    </style>
+    .notice-icon {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 9px;
+      color: var(--gold);
+      background: rgba(242,198,109,.09);
+      font-weight: 900;
+    }
+
+    .notice strong {
+      color: var(--gold);
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 23px;
+      text-align: center;
+      color: #71829f;
+      font-size: 10px;
+      line-height: 2;
+    }
+
+    .footer .gold {
+      color: var(--gold);
+    }
+
+    @media (max-height: 740px) {
+      .app {
+        padding-top: 16px;
+      }
+
+      .hero {
+        margin-top: 20px;
+      }
+
+      .connect-card {
+        margin-top: 15px;
+        padding-top: 16px;
+      }
+
+      .orbit {
+        width: 120px;
+        height: 120px;
+        margin: 13px auto;
+      }
+
+      .shield {
+        width: 82px;
+        height: 82px;
+        border-radius: 25px;
+      }
+
+      .shield svg {
+        width: 42px;
+        height: 42px;
+      }
+
+      .section-title {
+        margin-top: 17px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <main class="app">
-
-        <header class="header">
-            <div class="brand">
-                <div class="brand-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2.5 20 6v5.4c0 5-3.4 8.4-8 10.1-4.6-1.7-8-5.1-8-10.1V6l8-3.5Z"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="m8.5 12 2.3 2.3 4.8-5"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </div>
-
-                <div>
-                    <p class="brand-name">WOODE VPN</p>
-                    <p class="brand-subtitle">خصوصيتك تبدأ من اتصالك</p>
-                </div>
-            </div>
-
-            <span class="version">VERSION 1.0.0</span>
-        </header>
-
-        <section class="intro">
-            <div class="eyebrow">اتصال آمن • تحكم واضح</div>
-            <h1>اتصالك، تحت سيطرتك</h1>
-            <p class="description">
-                استخدم إعداد WireGuard الخاص بك لإدارة اتصال VPN
-                من واجهة واحدة سهلة الاستخدام.
-            </p>
-        </section>
-
-        <section class="connection-card">
-            <div id="statusPill" class="status-pill">
-                <span class="status-dot"></span>
-                <span id="statusLabel">جاهز</span>
-            </div>
-
-            <div class="shield-wrap">
-                <div id="shieldInner" class="shield-inner">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12 2.5 20 6v5.4c0 5-3.4 8.4-8 10.1-4.6-1.7-8-5.1-8-10.1V6l8-3.5Z"
-                            stroke="currentColor"
-                            stroke-width="1.45"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="M12 7.5v5"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                        />
-                        <circle cx="12" cy="16" r="0.9" fill="currentColor" />
-                    </svg>
-                </div>
-            </div>
-
-            <h2 id="connectionTitle" class="connection-title">
-                غير متصل
-            </h2>
-
-            <p id="connectionMessage" class="connection-message">
-                اختر ملف إعداد WireGuard صحيحًا للبدء.
-            </p>
-        </section>
-
-        <h2 class="section-heading">إعداد الاتصال</h2>
-
-        <section class="config-card">
-            <div class="config-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                        d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linejoin="round"
-                    />
-                    <path
-                        d="M14 3.5V9h5M8 13h8M8 16.5h8"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                    />
-                </svg>
-            </div>
-
-            <div class="config-info">
-                <p class="config-title">ملف إعداد WireGuard</p>
-                <p id="configDescription" class="config-description">
-                    لم يتم اختيار ملف إعداد بعد
-                </p>
-            </div>
-
-            <button
-                id="chooseButton"
-                class="choose-button"
-                type="button"
-                onclick="selectConfig()"
-            >
-                اختيار ملف
-            </button>
-        </section>
-
-        <div class="actions">
-            <button
-                id="connectButton"
-                class="connect-button"
-                type="button"
-                onclick="connectVPN()"
-            >
-                اتصال الآن
-            </button>
-
-            <button
-                id="disconnectButton"
-                class="disconnect-button"
-                type="button"
-                onclick="disconnectVPN()"
-                disabled
-            >
-                فصل الاتصال
-            </button>
+  <main class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2.4 20 5.8v5.3c0 5.1-3.2 8.6-8 10.5-4.8-1.9-8-5.4-8-10.5V5.8l8-3.4Z"
+              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="m8.2 12.1 2.4 2.4 5.1-5.2"
+              stroke="#f2c66d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
 
-        <aside class="notice">
-            <strong>تنبيه:</strong>
-            لا يتوفر خادم تلقائي في هذه النسخة حتى الآن.
-            تحتاج إلى ملف إعداد WireGuard من خادم تملك حق استخدامه.
-            لا تشارك ملف الإعداد أو مفاتيحه السرية مع الآخرين.
-        </aside>
+        <div>
+          <p class="brand-name">ود فيصل</p>
+          <p class="brand-subtitle">بوابتك إلى اتصال أكثر أمانًا</p>
+        </div>
+      </div>
 
-        <footer class="footer">
-            WOODE VPN — الإصدار 1.0.0
-            <br>
-            واجهة محلية؛ لا تعتمد على مكتبات خارجية.
-        </footer>
+      <span class="version">VERSION 3.0.0</span>
+    </header>
 
-    </main>
+    <section class="hero">
+      <div class="eyebrow">WD FAISAL • SECURE TUNNEL</div>
+      <h1>اتصالك، بإدارتك</h1>
+      <p>واجهة اتصال موحّدة بتصميم جديد، ومعلومات واضحة عن حالة النفق وإعداداته.</p>
+    </section>
 
-    <script>
-        "use strict";
+    <section class="connect-card" aria-label="حالة الاتصال">
+      <div id="statusPill" class="status-pill">
+        <span class="dot"></span>
+        <span id="statusLabel">جاهز</span>
+      </div>
 
-        const statusPill = document.getElementById("statusPill");
-        const statusLabel = document.getElementById("statusLabel");
-        const connectionTitle = document.getElementById("connectionTitle");
-        const connectionMessage = document.getElementById("connectionMessage");
-        const configDescription = document.getElementById("configDescription");
-        const shieldInner = document.getElementById("shieldInner");
-        const chooseButton = document.getElementById("chooseButton");
-        const connectButton = document.getElementById("connectButton");
-        const disconnectButton = document.getElementById("disconnectButton");
+      <div class="orbit" aria-hidden="true">
+        <div id="shieldInner" class="shield">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2.4 20 5.8v5.3c0 5.1-3.2 8.6-8 10.5-4.8-1.9-8-5.4-8-10.5V5.8l8-3.4Z"
+              stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
+            <path d="M12 7.5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
 
-        let configSelected = false;
-        let connecting = false;
-        let connected = false;
+      <h2 id="connectionTitle" class="connection-title">غير متصل</h2>
+      <p id="connectionMessage" class="message">اختر ملف إعداد متوافقًا مع محرك الاتصال الحالي للبدء.</p>
+    </section>
 
-        function renderState(type, message) {
-            statusPill.classList.remove("connected", "error", "loading");
-            shieldInner.classList.toggle("connected", type === "connected");
+    <h2 class="section-title">إعداد الاتصال <span>CONFIGURATION</span></h2>
 
-            connectionMessage.textContent = message || "";
+    <section class="config-card">
+      <div class="file-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
+            stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M14 3.5V9h5M8 13h8M8 16.5h6"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
 
-            if (type === "connected") {
-                statusPill.classList.add("connected");
-                statusLabel.textContent = "متصل";
-                connectionTitle.textContent = "الاتصال نشط";
-                connected = true;
-                connecting = false;
-            } else if (type === "connecting" || type === "disconnecting") {
-                statusPill.classList.add("loading");
-                statusLabel.textContent =
-                    type === "connecting" ? "جارٍ الاتصال" : "جارٍ الفصل";
-                connectionTitle.textContent =
-                    type === "connecting" ? "جارٍ إنشاء الاتصال" : "جارٍ فصل الاتصال";
-                connecting = true;
-            } else if (type === "error") {
-                statusPill.classList.add("error");
-                statusLabel.textContent = "تعذر إكمال العملية";
-                connectionTitle.textContent = "لم يكتمل الاتصال";
-                connecting = false;
-                connected = false;
-            } else if (type === "config_loaded") {
-                statusLabel.textContent = "الإعداد جاهز";
-                connectionTitle.textContent = "جاهز للاتصال";
-                configSelected = true;
-                connecting = false;
-                connected = false;
-                configDescription.textContent = "تم تحميل ملف الإعداد";
-            } else if (type === "config_required") {
-                statusLabel.textContent = "يلزم إعداد";
-                connectionTitle.textContent = "اختر ملف إعداد أولًا";
-                connecting = false;
-                connected = false;
-            } else if (type === "busy") {
-                statusLabel.textContent = "انتظر قليلًا";
-                connectionTitle.textContent = "العملية قيد التنفيذ";
-            } else {
-                statusLabel.textContent = "جاهز";
-                connectionTitle.textContent = "غير متصل";
-                connecting = false;
-                connected = false;
-            }
+      <div class="config-info">
+        <p class="config-name">ملف إعداد الاتصال</p>
+        <p id="configDescription" class="config-desc">لم يتم اختيار ملف إعداد بعد</p>
+      </div>
 
-            chooseButton.disabled = connecting || connected;
-            connectButton.disabled = connecting || connected;
-            disconnectButton.disabled = connecting || !connected;
-        }
+      <button id="chooseButton" class="choose" type="button" onclick="selectConfig()">
+        اختيار ملف
+      </button>
+    </section>
 
-        function showBridgeError() {
-            renderState(
-                "error",
-                "تعذر الوصول إلى وظائف Android. افتح التطبيق المثبت على الهاتف."
-            );
-        }
+    <div class="actions">
+      <button id="connectButton" class="connect-btn" type="button" onclick="connectVPN()">
+        بدء الاتصال
+      </button>
 
-        function selectConfig() {
-            if (!window.WoodeVPN ||
-                typeof window.WoodeVPN.selectConfig !== "function") {
-                showBridgeError();
-                return;
-            }
+      <button id="disconnectButton" class="disconnect-btn" type="button" onclick="disconnectVPN()" disabled>
+        فصل الاتصال
+      </button>
+    </div>
 
-            window.WoodeVPN.selectConfig();
-        }
+    <aside class="notice">
+      <span class="notice-icon">!</span>
+      <div>
+        <strong>معلومة مهمة</strong><br>
+        هذه الواجهة لا تنشئ خادمًا من تلقاء نفسها. يلزم إعداد صالح وخادم تملك حق استخدامه.
+        هذا التحديث يغيّر الواجهة فقط؛ محرك الاتصال الحالي ما زال WireGuard إلى أن نطوّر الجزء الأصلي في Android.
+      </div>
+    </aside>
 
-        function connectVPN() {
-            if (connecting || connected) return;
+    <footer class="footer">
+      <span class="gold">ود فيصل V3</span> · واجهة محلية عربية
+      <br>
+      خصوصية إعداداتك تبدأ بالمحافظة على ملفاتها ومفاتيحها السرية.
+    </footer>
+  </main>
 
-            if (!window.WoodeVPN ||
-                typeof window.WoodeVPN.connect !== "function") {
-                showBridgeError();
-                return;
-            }
+  <script>
+    "use strict";
 
-            window.WoodeVPN.connect();
-        }
+    const statusPill = document.getElementById("statusPill");
+    const statusLabel = document.getElementById("statusLabel");
+    const connectionTitle = document.getElementById("connectionTitle");
+    const connectionMessage = document.getElementById("connectionMessage");
+    const configDescription = document.getElementById("configDescription");
+    const shieldInner = document.getElementById("shieldInner");
+    const chooseButton = document.getElementById("chooseButton");
+    const connectButton = document.getElementById("connectButton");
+    const disconnectButton = document.getElementById("disconnectButton");
 
-        function disconnectVPN() {
-            if (connecting || !connected) return;
+    let configSelected = false;
+    let connecting = false;
+    let connected = false;
 
-            if (!window.WoodeVPN ||
-                typeof window.WoodeVPN.disconnect !== "function") {
-                showBridgeError();
-                return;
-            }
+    function renderState(type, message) {
+      statusPill.classList.remove("connected", "error", "loading");
+      shieldInner.classList.toggle("connected", type === "connected");
+      connectionMessage.textContent = message || "";
 
-            window.WoodeVPN.disconnect();
-        }
+      if (type === "connected") {
+        statusPill.classList.add("connected");
+        statusLabel.textContent = "متصل";
+        connectionTitle.textContent = "الاتصال نشط";
+        connected = true;
+        connecting = false;
 
-        window.onNativeVpnEvent = function (event) {
-            if (!event || typeof event !== "object") return;
+      } else if (type === "connecting" || type === "disconnecting") {
+        statusPill.classList.add("loading");
+        statusLabel.textContent =
+          type === "connecting" ? "جارٍ الاتصال" : "جارٍ الفصل";
+        connectionTitle.textContent =
+          type === "connecting" ? "جارٍ إنشاء الاتصال" : "جارٍ فصل الاتصال";
+        connecting = true;
 
-            const type = String(event.type || "ready");
-            const message = String(event.message || "");
+      } else if (type === "error") {
+        statusPill.classList.add("error");
+        statusLabel.textContent = "تعذر إكمال العملية";
+        connectionTitle.textContent = "لم يكتمل الاتصال";
+        connecting = false;
+        connected = false;
 
-            if (type === "config_loaded") {
-                configSelected = true;
-                configDescription.textContent = "تم تحميل ملف الإعداد";
-            }
+      } else if (type === "config_loaded") {
+        statusLabel.textContent = "الإعداد جاهز";
+        connectionTitle.textContent = "جاهز للاتصال";
+        configSelected = true;
+        connecting = false;
+        connected = false;
+        configDescription.textContent = "تم تحميل ملف إعداد WireGuard";
 
-            if (type === "disconnected") {
-                connected = false;
-                connecting = false;
-                configDescription.textContent = configSelected
-                    ? "تم تحميل ملف الإعداد"
-                    : "لم يتم اختيار ملف إعداد بعد";
-            }
+      } else if (type === "config_required") {
+        statusLabel.textContent = "يلزم إعداد";
+        connectionTitle.textContent = "اختر ملف إعداد أولًا";
+        connecting = false;
+        connected = false;
 
-            renderState(type, message);
-        };
+      } else if (type === "busy") {
+        statusLabel.textContent = "انتظر قليلًا";
+        connectionTitle.textContent = "العملية قيد التنفيذ";
 
-        renderState(
-            "ready",
-            "اختر ملف إعداد WireGuard صحيحًا للبدء."
-        );
-    </script>
+      } else {
+        statusLabel.textContent = "جاهز";
+        connectionTitle.textContent = "غير متصل";
+        connecting = false;
+        connected = false;
+      }
+
+      chooseButton.disabled = connecting || connected;
+      connectButton.disabled = connecting || connected;
+      disconnectButton.disabled = connecting || !connected;
+    }
+
+    function showBridgeError() {
+      renderState(
+        "error",
+        "تعذر الوصول إلى وظائف Android. افتح التطبيق المثبت على الهاتف."
+      );
+    }
+
+    function selectConfig() {
+      if (!window.WoodeVPN ||
+          typeof window.WoodeVPN.selectConfig !== "function") {
+        showBridgeError();
+        return;
+      }
+
+      window.WoodeVPN.selectConfig();
+    }
+
+    function connectVPN() {
+      if (connecting || connected) return;
+
+      if (!window.WoodeVPN ||
+          typeof window.WoodeVPN.connect !== "function") {
+        showBridgeError();
+        return;
+      }
+
+      window.WoodeVPN.connect();
+    }
+
+    function disconnectVPN() {
+      if (connecting || !connected) return;
+
+      if (!window.WoodeVPN ||
+          typeof window.WoodeVPN.disconnect !== "function") {
+        showBridgeError();
+        return;
+      }
+
+      window.WoodeVPN.disconnect();
+    }
+
+    window.onNativeVpnEvent = function (event) {
+      if (!event || typeof event !== "object") return;
+
+      const type = String(event.type || "ready");
+      const message = String(event.message || "");
+
+      if (type === "config_loaded") {
+        configSelected = true;
+        configDescription.textContent = "تم تحميل ملف إعداد WireGuard";
+      }
+
+      if (type === "disconnected") {
+        connected = false;
+        connecting = false;
+
+        configDescription.textContent = configSelected
+          ? "تم تحميل ملف إعداد WireGuard"
+          : "لم يتم اختيار ملف إعداد بعد";
+      }
+
+      renderState(type, message);
+    };
+
+    renderState(
+      "ready",
+      "اختر ملف إعداد متوافقًا مع محرك الاتصال الحالي للبدء."
+    );
+  </script>
 </body>
 </html>
