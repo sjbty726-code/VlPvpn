@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
+import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -21,6 +22,9 @@ import com.wireguard.config.Config
 import org.json.JSONObject
 
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
@@ -28,12 +32,19 @@ class MainActivity : Activity() {
     companion object {
         private const val REQUEST_CONFIG = 2101
         private const val REQUEST_VPN_PERMISSION = 2102
+        private const val REQUEST_EXPORT_CONFIG = 2103
 
         private const val ASSET_HOST =
             "appassets.androidplatform.net"
 
         private const val ASSET_BASE_URL =
             "https://appassets.androidplatform.net/assets/"
+
+        // الحد الأقصى لملف الإعداد: 1 ميغابايت
+        private const val MAX_CONFIG_BYTES = 1024 * 1024
+
+        // إصدار صيغة ملفات ود فيصل
+        private const val WDF_VERSION = 1
     }
 
     private lateinit var webView: WebView
@@ -49,6 +60,10 @@ class MainActivity : Activity() {
     }
 
     private var selectedConfig: Config? = null
+
+    // نحتفظ بمحتوى الإعداد للتحقق منه وتصديره لاحقًا.
+    private var selectedConfigBytes: ByteArray? = null
+
     private var connectionInProgress = false
 
     private val tunnel = object : Tunnel {
@@ -61,7 +76,7 @@ class MainActivity : Activity() {
             publish(
                 if (isUp) "connected" else "disconnected",
                 if (isUp) {
-                    "حالة نفق WireGuard نشطة"
+                    "اتصال WireGuard نشط"
                 } else {
                     "نفق VPN غير متصل"
                 },
@@ -114,7 +129,7 @@ class MainActivity : Activity() {
                         ?: blockedResponse()
                 }
 
-                // لا نسمح بتحميل موارد من نطاقات خارجية.
+                // منع تحميل موارد الواجهة من مواقع خارجية.
                 return blockedResponse()
             }
 
@@ -123,8 +138,6 @@ class MainActivity : Activity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val uri = request?.url ?: return true
-
-                // التنقل مسموح لملفات واجهة التطبيق المحلية فقط.
                 return !isLocalAssetUrl(uri)
             }
 
@@ -139,7 +152,7 @@ class MainActivity : Activity() {
                 ) {
                     publish(
                         "ready",
-                        "واجهة WOODE VPN جاهزة"
+                        "واجهة ود فيصل V3 جاهزة"
                     )
                 }
             }
@@ -176,6 +189,15 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (!activityDestroyed) {
                     openConfigPicker()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun exportConfig() {
+            runOnUiThread {
+                if (!activityDestroyed) {
+                    openExportPicker()
                 }
             }
         }
@@ -220,6 +242,41 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun openExportPicker() {
+        if (selectedConfig == null ||
+            selectedConfigBytes == null
+        ) {
+            publish(
+                "config_required",
+                "حمّل إعدادًا صالحًا قبل التصدير"
+            )
+            return
+        }
+
+        val intent = Intent(
+            Intent.ACTION_CREATE_DOCUMENT
+        ).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/json"
+            putExtra(
+                Intent.EXTRA_TITLE,
+                "wad-faisal-profile.wdf"
+            )
+        }
+
+        try {
+            startActivityForResult(
+                intent,
+                REQUEST_EXPORT_CONFIG
+            )
+        } catch (_: Exception) {
+            publish(
+                "error",
+                "تعذر فتح نافذة حفظ الملف"
+            )
+        }
+    }
+
     @Deprecated("Uses the activity result API for compatibility")
     override fun onActivityResult(
         requestCode: Int,
@@ -258,6 +315,28 @@ class MainActivity : Activity() {
                 importConfig(uri)
             }
 
+            REQUEST_EXPORT_CONFIG -> {
+                if (resultCode != RESULT_OK) {
+                    publish(
+                        "ready",
+                        "تم إلغاء حفظ الإعداد"
+                    )
+                    return
+                }
+
+                val uri = data?.data
+
+                if (uri == null) {
+                    publish(
+                        "error",
+                        "تعذر الوصول إلى مكان الحفظ"
+                    )
+                    return
+                }
+
+                exportConfigTo(uri)
+            }
+
             REQUEST_VPN_PERMISSION -> {
                 if (resultCode == RESULT_OK) {
                     startTunnel()
@@ -273,32 +352,175 @@ class MainActivity : Activity() {
 
     private fun importConfig(uri: Uri) {
         try {
-            val config = contentResolver
+            val fileBytes = contentResolver
                 .openInputStream(uri)
-                ?.use { stream ->
-                    Config.parse(stream)
+                ?.use { input ->
+                    readLimited(input, MAX_CONFIG_BYTES)
                 }
                 ?: throw IllegalArgumentException(
-                    "Empty configuration"
+                    "تعذر قراءة الملف"
                 )
 
+            require(fileBytes.isNotEmpty()) {
+                "ملف فارغ"
+            }
+
+            // يقبل ملف WireGuard المعتاد أو ملف WDF الخاص بنا.
+            val configBytes = decodeImportedConfig(fileBytes)
+
+            val config = Config.parse(
+                ByteArrayInputStream(configBytes)
+            )
+
             require(config.peers.isNotEmpty()) {
-                "Missing WireGuard peer"
+                "الإعداد لا يحتوي على خادم WireGuard"
             }
 
             selectedConfig = config
+            selectedConfigBytes = configBytes.copyOf()
 
             publish(
                 "config_loaded",
-                "تم تحميل إعداد WireGuard"
+                "تم تحميل إعداد ود فيصل بنجاح"
             )
 
         } catch (_: Exception) {
             selectedConfig = null
+            selectedConfigBytes = null
 
             publish(
                 "error",
-                "تعذر قراءة الملف. اختر إعداد WireGuard صحيحًا."
+                "تعذر قراءة الإعداد. تحقق من صحة ملف WireGuard أو WDF."
+            )
+        }
+    }
+
+    /**
+     * صيغة WDF الحالية:
+     * {
+     *   "format": "WDF",
+     *   "version": 1,
+     *   "engine": "wireguard",
+     *   "payload": "Base64 لمحتوى ملف WireGuard"
+     * }
+     */
+    private fun decodeImportedConfig(
+        fileBytes: ByteArray
+    ): ByteArray {
+        val text = String(
+            fileBytes,
+            StandardCharsets.UTF_8
+        ).trim()
+
+        if (!text.startsWith("{")) {
+            // ملف WireGuard عادي.
+            return fileBytes
+        }
+
+        val json = JSONObject(text)
+
+        if (json.optString("format") != "WDF") {
+            // سيجري التحقق منه لاحقًا بواسطة محلل WireGuard.
+            return fileBytes
+        }
+
+        require(json.optInt("version", -1) == WDF_VERSION) {
+            "إصدار WDF غير مدعوم"
+        }
+
+        require(json.optString("engine") == "wireguard") {
+            "محرك الاتصال الموجود في الملف غير مدعوم"
+        }
+
+        val payload = json.optString("payload", "")
+
+        require(payload.isNotBlank()) {
+            "محتوى ملف WDF فارغ"
+        }
+
+        val decoded = Base64.decode(
+            payload,
+            Base64.DEFAULT
+        )
+
+        require(decoded.isNotEmpty()) {
+            "محتوى إعداد WDF فارغ"
+        }
+
+        require(decoded.size <= MAX_CONFIG_BYTES) {
+            "حجم الإعداد أكبر من الحد المسموح"
+        }
+
+        return decoded
+    }
+
+    private fun readLimited(
+        input: InputStream,
+        maxBytes: Int
+    ): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        var total = 0
+
+        while (true) {
+            val count = input.read(buffer)
+
+            if (count == -1) break
+
+            total += count
+
+            require(total <= maxBytes) {
+                "حجم الملف أكبر من الحد المسموح"
+            }
+
+            output.write(buffer, 0, count)
+        }
+
+        return output.toByteArray()
+    }
+
+    private fun exportConfigTo(uri: Uri) {
+        try {
+            val configBytes = selectedConfigBytes
+                ?: throw IllegalStateException(
+                    "لا يوجد إعداد محمّل"
+                )
+
+            val json = JSONObject()
+                .put("format", "WDF")
+                .put("version", WDF_VERSION)
+                .put("engine", "wireguard")
+                .put(
+                    "payload",
+                    Base64.encodeToString(
+                        configBytes,
+                        Base64.NO_WRAP
+                    )
+                )
+
+            val outputBytes = json
+                .toString(2)
+                .toByteArray(StandardCharsets.UTF_8)
+
+            val output = contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException(
+                    "تعذر فتح الملف للحفظ"
+                )
+
+            output.use {
+                it.write(outputBytes)
+                it.flush()
+            }
+
+            publish(
+                "config_exported",
+                "تم حفظ إعداد ود فيصل بصيغة WDF"
+            )
+
+        } catch (_: Exception) {
+            publish(
+                "error",
+                "فشل تصدير الإعداد. حاول الحفظ في مكان آخر."
             )
         }
     }
@@ -309,7 +531,7 @@ class MainActivity : Activity() {
         if (selectedConfig == null) {
             publish(
                 "config_required",
-                "اختر ملف إعداد WireGuard أولًا"
+                "اختر ملف إعداد WireGuard أو WDF أولًا"
             )
             return
         }
@@ -374,7 +596,7 @@ class MainActivity : Activity() {
                     if (confirmed) {
                         publish(
                             "connected",
-                            "حالة نفق WireGuard نشطة",
+                            "اتصال WireGuard نشط",
                             true
                         )
                     } else {
@@ -435,7 +657,7 @@ class MainActivity : Activity() {
                     if (confirmed) {
                         publish(
                             "disconnected",
-                            "تم فصل نفق WireGuard",
+                            "تم فصل اتصال VPN",
                             false
                         )
                     } else {
