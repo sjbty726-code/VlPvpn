@@ -12,8 +12,12 @@ android {
         applicationId = "com.woode.vpn"
         minSdk = 23
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+
+        // رقم البناء التالي بعد الإصدار السابق
+        versionCode = 2
+
+        // اسم الإصدار الجديد
+        versionName = "3.0.0"
     }
 
     compileOptions {
@@ -34,7 +38,10 @@ android {
 }
 
 dependencies {
+    // محرك اتصال WireGuard الحالي
     implementation("com.wireguard.android:tunnel:1.0.20250531")
+
+    // عرض واجهة التطبيق المحلية
     implementation("androidx.webkit:webkit:1.14.0")
 
     coreLibraryDesugaring(
