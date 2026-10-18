@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Java 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
@@ -34,22 +34,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           sdkmanager --install \
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.0"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
 
-      - name: Check required project files
+      - name: Check project files
         shell: bash
         run: |
           set -euo pipefail
-
           test -f settings.gradle.kts
           test -f build.gradle.kts
           test -f app/build.gradle.kts
@@ -57,36 +55,28 @@ jobs:
           test -f app/src/main/java/com/woode/vpn/MainActivity.kt
           test -f app/src/main/assets/index.html
 
-          java -version
-          gradle --version
-
       - name: Build debug APK
-        id: build_apk
         shell: bash
         run: |
           set -o pipefail
-
-          gradle \
-            --no-daemon \
+          gradle --no-daemon \
             --stacktrace \
             --console=plain \
             assembleDebug 2>&1 | tee build.log
 
-      - name: Show useful error details
+      - name: Display error details
         if: failure()
         shell: bash
         run: |
-          echo "===== BUILD ERROR DETAILS ====="
-
+          echo "===== GRADLE ERROR DETAILS ====="
           if [ -f build.log ]; then
             grep -n -B 4 -A 10 -E \
-              'What went wrong:|Caused by:|Execution failed for task|Could not resolve|Could not find|(^|: )e: |error:' \
-              build.log | tail -n 180 || true
-
-            echo "===== END ERROR DETAILS ====="
+              'What went wrong:|Caused by:|Execution failed for task|Could not resolve|Could not find|e: file:|error:' \
+              build.log | tail -n 150 || tail -n 100 build.log
           else
-            echo "Gradle build log was not created."
+            echo "build.log was not created."
           fi
+          echo "===== END ERROR DETAILS ====="
 
       - name: Upload failure log
         if: failure()
@@ -101,14 +91,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           APK="app/build/outputs/apk/debug/app-debug.apk"
-
           test -s "$APK"
-
           mkdir -p dist
           cp "$APK" dist/WOODE-VPN-debug.apk
-
           ls -lh dist/WOODE-VPN-debug.apk
 
       - name: Upload APK
