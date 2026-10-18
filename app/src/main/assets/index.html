@@ -1,792 +1,672 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#050914">
-  <title>ود فيصل V3</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #050914;
-      --panel: rgba(10, 21, 42, .86);
-      --panel-2: rgba(15, 31, 58, .84);
-      --line: rgba(101, 163, 255, .19);
-      --blue: #168cff;
-      --blue2: #52c7ff;
-      --gold: #f2c66d;
-      --text: #f4f7ff;
-      --muted: #9aaccb;
-      --green: #40e0b0;
-      --red: #ff6e88;
-      --yellow: #ffd16d;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html {
-      min-height: 100%;
-      background: var(--bg);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      font-family: system-ui, -apple-system, "Noto Sans Arabic", Arial, sans-serif;
-      background:
-        radial-gradient(ellipse at 50% -5%, rgba(0, 112, 255, .28), transparent 43%),
-        radial-gradient(ellipse at 100% 44%, rgba(0, 160, 255, .10), transparent 34%),
-        radial-gradient(ellipse at 0% 80%, rgba(8, 86, 220, .12), transparent 38%),
-        linear-gradient(155deg, #050914 0%, #071329 48%, #030711 100%);
-      background-attachment: fixed;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .24;
-      background-image:
-        linear-gradient(rgba(70,145,255,.075) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(70,145,255,.075) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: linear-gradient(to bottom, #000, transparent 78%);
-    }
-
-    button {
-      font: inherit;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .42;
-      cursor: default;
-    }
-
-    .app {
-      position: relative;
-      z-index: 1;
-      width: min(100%, 490px);
-      min-height: 100vh;
-      margin: auto;
-      padding: max(22px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .brand-mark {
-      width: 50px;
-      height: 50px;
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      border-radius: 17px;
-      border: 1px solid rgba(85,178,255,.46);
-      background: linear-gradient(145deg, rgba(20,125,255,.32), rgba(8,22,48,.92));
-      box-shadow: inset 0 0 18px rgba(42,139,255,.12), 0 0 24px rgba(0,110,255,.13);
-    }
-
-    .brand-mark svg {
-      width: 30px;
-      height: 30px;
-    }
-
-    .brand-name {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: .1px;
-    }
-
-    .brand-subtitle {
-      margin: 3px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .version {
-      padding: 7px 10px;
-      border-radius: 30px;
-      background: rgba(242,198,109,.08);
-      border: 1px solid rgba(242,198,109,.25);
-      color: var(--gold);
-      font-size: 10px;
-      letter-spacing: .65px;
-      white-space: nowrap;
-      direction: ltr;
-    }
-
-    .hero {
-      margin-top: 29px;
-    }
-
-    .eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--blue2);
-      font-weight: 800;
-      font-size: 11px;
-      letter-spacing: .3px;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 22px;
-      height: 2px;
-      border-radius: 2px;
-      background: var(--gold);
-    }
-
-    h1 {
-      margin: 9px 0 7px;
-      font-size: clamp(25px, 7vw, 31px);
-      line-height: 1.45;
-      font-weight: 900;
-    }
-
-    .hero p {
-      margin: 0;
-      max-width: 350px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.9;
-    }
-
-    .connect-card {
-      position: relative;
-      overflow: hidden;
-      margin-top: 22px;
-      padding: 21px 18px 20px;
-      text-align: center;
-      border: 1px solid rgba(93,155,248,.24);
-      border-radius: 27px;
-      background: linear-gradient(145deg, rgba(12,29,57,.91), rgba(5,13,29,.95));
-      box-shadow: 0 18px 54px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.035);
-    }
-
-    .connect-card::before {
-      content: "";
-      position: absolute;
-      width: 230px;
-      height: 230px;
-      top: -152px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #087dff;
-      filter: blur(70px);
-      opacity: .23;
-      pointer-events: none;
-    }
-
-    .connect-card::after {
-      content: "";
-      position: absolute;
-      width: 180px;
-      height: 1px;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(90deg, transparent, var(--blue), var(--gold), transparent);
-      opacity: .7;
-    }
-
-    .status-pill {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 13px;
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      background: rgba(255,255,255,.035);
-      color: #c3d0e7;
-      font-size: 11px;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: var(--yellow);
-      box-shadow: 0 0 11px rgba(255,209,109,.35);
-    }
-
-    .status-pill.connected {
-      color: var(--green);
-      border-color: rgba(64,224,176,.3);
-      background: rgba(64,224,176,.07);
-    }
-
-    .status-pill.connected .dot {
-      background: var(--green);
-      box-shadow: 0 0 12px rgba(64,224,176,.7);
-    }
-
-    .status-pill.error {
-      color: var(--red);
-      border-color: rgba(255,110,136,.28);
-    }
-
-    .status-pill.error .dot {
-      background: var(--red);
-    }
-
-    .status-pill.loading .dot {
-      background: var(--blue2);
-      animation: pulse .8s ease-in-out infinite alternate;
-    }
-
-    @keyframes pulse {
-      from {
-        opacity: .35;
-        transform: scale(.85);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1.15);
-      }
-    }
-
-    .orbit {
-      position: relative;
-      width: 151px;
-      height: 151px;
-      display: grid;
-      place-items: center;
-      margin: 19px auto 17px;
-      border-radius: 50%;
-      border: 1px solid rgba(76,159,255,.22);
-      background: radial-gradient(circle, rgba(7,107,255,.14), rgba(7,107,255,.015) 68%);
-    }
-
-    .orbit::before,
-    .orbit::after {
-      content: "";
-      position: absolute;
-      inset: 9px;
-      border-radius: 50%;
-      border: 1px dashed rgba(75,153,255,.26);
-      animation: rotate 26s linear infinite;
-    }
-
-    .orbit::after {
-      inset: 18px;
-      border-style: solid;
-      border-color: rgba(242,198,109,.14);
-      animation-direction: reverse;
-      animation-duration: 34s;
-    }
-
-    @keyframes rotate {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .shield {
-      position: relative;
-      z-index: 1;
-      width: 102px;
-      height: 102px;
-      display: grid;
-      place-items: center;
-      border: 1px solid rgba(79,167,255,.5);
-      border-radius: 31px;
-      color: #73caff;
-      background: linear-gradient(145deg, #11366b, #09162f 78%);
-      box-shadow: 0 0 35px rgba(0,119,255,.2), inset 0 0 22px rgba(36,137,255,.13);
-      transition: .25s ease;
-    }
-
-    .shield svg {
-      width: 52px;
-      height: 52px;
-    }
-
-    .shield.connected {
-      color: var(--green);
-      border-color: rgba(64,224,176,.48);
-      background: linear-gradient(145deg, #14524c, #071d2a);
-      box-shadow: 0 0 35px rgba(64,224,176,.16);
-    }
-
-    .connection-title {
-      position: relative;
-      margin: 0;
-      font-size: 19px;
-      font-weight: 850;
-    }
-
-    .message {
-      position: relative;
-      min-height: 42px;
-      max-width: 320px;
-      margin: 8px auto 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.9;
-      overflow-wrap: anywhere;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin: 22px 2px 11px;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .section-title span {
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 500;
-    }
-
-    .config-card {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 14px 13px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
-      backdrop-filter: blur(12px);
-    }
-
-    .file-icon {
-      display: grid;
-      place-items: center;
-      width: 43px;
-      height: 43px;
-      flex: 0 0 auto;
-      border-radius: 14px;
-      border: 1px solid rgba(65,151,255,.16);
-      color: #76bdff;
-      background: rgba(31,117,255,.12);
-    }
-
-    .file-icon svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    .config-info {
-      min-width: 0;
-      flex: 1;
-      text-align: right;
-    }
-
-    .config-name {
-      margin: 0;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .config-desc {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.7;
-      overflow-wrap: anywhere;
-    }
-
-    .choose {
-      padding: 9px 11px;
-      flex: 0 0 auto;
-      border: 1px solid rgba(80,165,255,.34);
-      border-radius: 11px;
-      color: #a2d6ff;
-      background: rgba(22,140,255,.11);
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .actions {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .connect-btn {
-      min-height: 53px;
-      border: 1px solid rgba(130,194,255,.36);
-      border-radius: 15px;
-      color: white;
-      background: linear-gradient(100deg, #086fe8, #168cff 58%, #36b8ff);
-      box-shadow: 0 9px 25px rgba(0,111,255,.18), inset 0 1px 0 rgba(255,255,255,.15);
-      font-size: 14px;
-      font-weight: 900;
-    }
-
-    .disconnect-btn {
-      min-height: 47px;
-      border: 1px solid var(--line);
-      border-radius: 15px;
-      color: #d4e0f5;
-      background: rgba(17,34,61,.88);
-      font-size: 12px;
-      font-weight: 750;
-    }
-
-    .connect-btn:active,
-    .disconnect-btn:active,
-    .choose:active {
-      transform: scale(.99);
-    }
-
-    .notice {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-top: 16px;
-      padding: 12px 13px;
-      border: 1px solid rgba(242,198,109,.18);
-      border-radius: 15px;
-      background: rgba(242,198,109,.045);
-      color: #b8c4da;
-      font-size: 10px;
-      line-height: 1.9;
-    }
-
-    .notice-icon {
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 9px;
-      color: var(--gold);
-      background: rgba(242,198,109,.09);
-      font-weight: 900;
-    }
-
-    .notice strong {
-      color: var(--gold);
-    }
-
-    .footer {
-      margin-top: auto;
-      padding-top: 23px;
-      text-align: center;
-      color: #71829f;
-      font-size: 10px;
-      line-height: 2;
-    }
-
-    .footer .gold {
-      color: var(--gold);
-    }
-
-    @media (max-height: 740px) {
-      .app {
-        padding-top: 16px;
-      }
-
-      .hero {
-        margin-top: 20px;
-      }
-
-      .connect-card {
-        margin-top: 15px;
-        padding-top: 16px;
-      }
-
-      .orbit {
-        width: 120px;
-        height: 120px;
-        margin: 13px auto;
-      }
-
-      .shield {
-        width: 82px;
-        height: 82px;
-        border-radius: 25px;
-      }
-
-      .shield svg {
-        width: 42px;
-        height: 42px;
-      }
-
-      .section-title {
-        margin-top: 17px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080c16">
+<title>ود فيصل V3</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #080c16;
+  --panel: #111a2b;
+  --panel2: #0d1422;
+  --blue: #4388ff;
+  --cyan: #56e0ff;
+  --gold: #f6c667;
+  --text: #f3f6ff;
+  --muted: #91a1bc;
+  --border: rgba(139, 169, 220, .16);
+  --green: #47dfa0;
+  --red: #ff6e83;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% -20%, #18366a 0, transparent 55%),
+    radial-gradient(ellipse at 0% 75%, #11244b 0, transparent 42%),
+    var(--bg);
+  color: var(--text);
+  font-family: Arial, Tahoma, sans-serif;
+  padding: 20px 15px 28px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  margin: auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 49px;
+  height: 49px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #4388ff, #172d5c);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 0 28px rgba(67,136,255,.2);
+}
+
+.logo svg {
+  width: 29px;
+  height: 29px;
+}
+
+.brand h1 {
+  margin: 0 0 5px;
+  font-size: 20px;
+  letter-spacing: .2px;
+}
+
+.brand p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.version {
+  font-size: 11px;
+  color: var(--gold);
+  background: rgba(246,198,103,.08);
+  border: 1px solid rgba(246,198,103,.2);
+  border-radius: 20px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.hero {
+  text-align: center;
+  padding: 22px 18px 25px;
+  background: linear-gradient(150deg, rgba(24,43,76,.9), rgba(12,19,33,.92));
+  border: 1px solid var(--border);
+  border-radius: 25px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero:before {
+  content: "";
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  border: 1px solid rgba(86,224,255,.08);
+  top: -135px;
+  left: calc(50% - 115px);
+  box-shadow: 0 0 0 25px rgba(86,224,255,.018),
+              0 0 0 50px rgba(86,224,255,.014);
+}
+
+.orbit {
+  width: 148px;
+  height: 148px;
+  margin: 0 auto 17px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(86,224,255,.25);
+  border-radius: 50%;
+  box-shadow: 0 0 32px rgba(67,136,255,.10),
+              inset 0 0 24px rgba(67,136,255,.08);
+}
+
+.orbit:before,
+.orbit:after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(86,224,255,.23);
+  inset: 10px;
+}
+
+.orbit:after {
+  inset: 23px;
+  border-style: solid;
+  border-color: rgba(246,198,103,.19);
+}
+
+.shield {
+  width: 70px;
+  height: 80px;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 14px rgba(86,224,255,.28));
+  z-index: 1;
+}
+
+.hero h2 {
+  font-size: 23px;
+  margin: 0 0 8px;
+}
+
+.hero .subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 19px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #718096;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.dot.ready { background: var(--blue); }
+.dot.connecting { background: var(--gold); }
+.dot.connected { background: var(--green); }
+.dot.error { background: var(--red); }
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 3px 12px;
+  font-size: 14px;
+}
+
+.section-title small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.config-card {
+  background: rgba(17,26,43,.88);
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  padding: 16px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon {
+  flex: 0 0 43px;
+  height: 43px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--cyan);
+  background: rgba(86,224,255,.08);
+  border: 1px solid rgba(86,224,255,.16);
+}
+
+.file-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.file-info strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
+}
+
+.file-info span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tag {
+  color: var(--gold) !important;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.btn {
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  color: var(--text);
+  background: #172238;
+  transition: transform .15s, opacity .15s;
+}
+
+.btn:active {
+  transform: scale(.98);
+}
+
+.btn:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  color: white;
+  background: linear-gradient(105deg, #397cf1, #2858bc);
+  border-color: rgba(111,164,255,.35);
+  box-shadow: 0 7px 20px rgba(41,103,220,.15);
+}
+
+.btn-gold {
+  color: #ffe6aa;
+  background: rgba(246,198,103,.08);
+  border-color: rgba(246,198,103,.23);
+}
+
+.connect-box {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: rgba(10,16,28,.73);
+}
+
+.connect-btn {
+  width: 100%;
+  min-height: 55px;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.connect-btn.start {
+  color: #051b16;
+  background: linear-gradient(100deg, #58efb0, #35cda0);
+  border: 0;
+  box-shadow: 0 8px 24px rgba(53,205,160,.12);
+}
+
+.connect-btn.stop {
+  color: white;
+  background: linear-gradient(100deg, #ed596e, #b82e4c);
+  border: 0;
+}
+
+.connect-btn:disabled {
+  opacity: .5;
+}
+
+.security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.security-note span {
+  color: var(--gold);
+}
+
+.message {
+  display: none;
+  margin-top: 13px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.message.show {
+  display: block;
+}
+
+.message.success {
+  color: var(--green);
+  background: rgba(71,223,160,.06);
+}
+
+.message.error {
+  color: #ff9aa8;
+  background: rgba(255,110,131,.06);
+}
+
+.message.info {
+  color: #b9d0ff;
+  background: rgba(67,136,255,.07);
+}
+
+.footer {
+  text-align: center;
+  color: #667995;
+  font-size: 10px;
+  margin-top: 24px;
+  line-height: 1.9;
+}
+
+.footer strong {
+  color: #94a7c7;
+}
+
+@media (max-width: 360px) {
+  body { padding: 15px 11px; }
+  .brand h1 { font-size: 18px; }
+  .version { font-size: 10px; padding: 6px 8px; }
+}
+</style>
 </head>
 
 <body>
-  <main class="app">
-    <header class="header">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 2.4 20 5.8v5.3c0 5.1-3.2 8.6-8 10.5-4.8-1.9-8-5.4-8-10.5V5.8l8-3.4Z"
-              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="m8.2 12.1 2.4 2.4 5.1-5.2"
-              stroke="#f2c66d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
+<main class="app">
 
-        <div>
-          <p class="brand-name">ود فيصل</p>
-          <p class="brand-subtitle">بوابتك إلى اتصال أكثر أمانًا</p>
-        </div>
-      </div>
-
-      <span class="version">VERSION 3.0.0</span>
-    </header>
-
-    <section class="hero">
-      <div class="eyebrow">WD FAISAL • SECURE TUNNEL</div>
-      <h1>اتصالك، بإدارتك</h1>
-      <p>واجهة اتصال موحّدة بتصميم جديد، ومعلومات واضحة عن حالة النفق وإعداداته.</p>
-    </section>
-
-    <section class="connect-card" aria-label="حالة الاتصال">
-      <div id="statusPill" class="status-pill">
-        <span class="dot"></span>
-        <span id="statusLabel">جاهز</span>
-      </div>
-
-      <div class="orbit" aria-hidden="true">
-        <div id="shieldInner" class="shield">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 2.4 20 5.8v5.3c0 5.1-3.2 8.6-8 10.5-4.8-1.9-8-5.4-8-10.5V5.8l8-3.4Z"
-              stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
-            <path d="M12 7.5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <circle cx="12" cy="16" r="1" fill="currentColor"/>
-          </svg>
-        </div>
-      </div>
-
-      <h2 id="connectionTitle" class="connection-title">غير متصل</h2>
-      <p id="connectionMessage" class="message">اختر ملف إعداد متوافقًا مع محرك الاتصال الحالي للبدء.</p>
-    </section>
-
-    <h2 class="section-title">إعداد الاتصال <span>CONFIGURATION</span></h2>
-
-    <section class="config-card">
-      <div class="file-icon" aria-hidden="true">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"
-            stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M14 3.5V9h5M8 13h8M8 16.5h6"
-            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 2.5 20 6v5.4c0 5.1-3.3 8.5-8 10.1-4.7-1.6-8-5-8-10.1V6l8-3.5Z"
+                stroke="white" stroke-width="1.6"/>
+          <path d="m8.3 12.1 2.4 2.4 5.1-5.2"
+                stroke="#9deaff" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-
-      <div class="config-info">
-        <p class="config-name">ملف إعداد الاتصال</p>
-        <p id="configDescription" class="config-desc">لم يتم اختيار ملف إعداد بعد</p>
+      <div>
+        <h1>ود فيصل</h1>
+        <p>PRIVATE VPN CONNECTION</p>
       </div>
+    </div>
+    <span class="version">الإصدار 3.0.0</span>
+  </header>
 
-      <button id="chooseButton" class="choose" type="button" onclick="selectConfig()">
-        اختيار ملف
-      </button>
-    </section>
-
-    <div class="actions">
-      <button id="connectButton" class="connect-btn" type="button" onclick="connectVPN()">
-        بدء الاتصال
-      </button>
-
-      <button id="disconnectButton" class="disconnect-btn" type="button" onclick="disconnectVPN()" disabled>
-        فصل الاتصال
-      </button>
+  <section class="hero">
+    <div class="orbit">
+      <svg class="shield" viewBox="0 0 64 76" fill="none">
+        <path d="M32 3 57 13v19c0 18-11 31-25 39C18 63 7 50 7 32V13L32 3Z"
+              stroke="currentColor" stroke-width="2"/>
+        <path d="M32 11 50 18v14c0 13-7 24-18 31C21 56 14 45 14 32V18l18-7Z"
+              stroke="currentColor" stroke-opacity=".45"/>
+        <path d="m22 36 7 7 14-15" stroke="#f6c667"
+              stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
     </div>
 
-    <aside class="notice">
-      <span class="notice-icon">!</span>
-      <div>
-        <strong>معلومة مهمة</strong><br>
-        هذه الواجهة لا تنشئ خادمًا من تلقاء نفسها. يلزم إعداد صالح وخادم تملك حق استخدامه.
-        هذا التحديث يغيّر الواجهة فقط؛ محرك الاتصال الحالي ما زال WireGuard إلى أن نطوّر الجزء الأصلي في Android.
+    <h2>اتصالك تحت سيطرتك</h2>
+    <p class="subtitle">
+      إدارة ملفات الاتصال وتشغيل نفق VPN<br>
+      من واجهة واحدة سهلة الاستخدام
+    </p>
+
+    <div class="status-line" aria-live="polite">
+      <span class="dot ready" id="statusDot"></span>
+      <span id="statusText">جاهز لاختيار الإعداد</span>
+    </div>
+  </section>
+
+  <div class="section-title">
+    <strong>إعداد الاتصال</strong>
+    <small>PROFILE MANAGER</small>
+  </div>
+
+  <section class="config-card">
+    <div class="config-row">
+      <div class="file-icon">WDF</div>
+      <div class="file-info">
+        <strong id="configName">لم يتم اختيار ملف</strong>
+        <span id="configHint">اختر ملف WireGuard أو WDF</span>
       </div>
-    </aside>
+    </div>
 
-    <footer class="footer">
-      <span class="gold">ود فيصل V3</span> · واجهة محلية عربية
-      <br>
-      خصوصية إعداداتك تبدأ بالمحافظة على ملفاتها ومفاتيحها السرية.
-    </footer>
-  </main>
+    <div class="action-grid">
+      <button class="btn btn-primary" id="importBtn"
+              type="button" onclick="chooseConfig()">
+        ＋ استيراد إعداد
+      </button>
+      <button class="btn btn-gold" id="exportBtn"
+              type="button" onclick="exportConfig()" disabled>
+        ⇩ تصدير WDF
+      </button>
+    </div>
+  </section>
 
-  <script>
-    "use strict";
+  <div class="section-title">
+    <strong>التحكم بالاتصال</strong>
+    <small>VPN CONTROL</small>
+  </div>
 
-    const statusPill = document.getElementById("statusPill");
-    const statusLabel = document.getElementById("statusLabel");
-    const connectionTitle = document.getElementById("connectionTitle");
-    const connectionMessage = document.getElementById("connectionMessage");
-    const configDescription = document.getElementById("configDescription");
-    const shieldInner = document.getElementById("shieldInner");
-    const chooseButton = document.getElementById("chooseButton");
-    const connectButton = document.getElementById("connectButton");
-    const disconnectButton = document.getElementById("disconnectButton");
+  <section class="connect-box">
+    <button id="connectBtn" class="connect-btn start"
+            type="button" onclick="connectVPN()">
+      تشغيل الاتصال
+    </button>
 
-    let configSelected = false;
-    let connecting = false;
-    let connected = false;
+    <button id="disconnectBtn" class="connect-btn stop"
+            type="button" onclick="disconnectVPN()"
+            style="display:none; margin-top:9px">
+      فصل الاتصال
+    </button>
 
-    function renderState(type, message) {
-      statusPill.classList.remove("connected", "error", "loading");
-      shieldInner.classList.toggle("connected", type === "connected");
-      connectionMessage.textContent = message || "";
+    <div class="security-note">
+      <span>◆</span>
+      <div>
+        محرك الاتصال الحالي هو WireGuard. يلزم ملف صالح وخادم
+        متاح لإتمام الاتصال. ملفات WDF الحالية تحفظ إعداد WireGuard
+        ولا تضيف بروتوكولات أخرى.
+      </div>
+    </div>
+  </section>
 
-      if (type === "connected") {
-        statusPill.classList.add("connected");
-        statusLabel.textContent = "متصل";
-        connectionTitle.textContent = "الاتصال نشط";
-        connected = true;
-        connecting = false;
+  <div class="message info show" id="messageBox" role="status"
+       aria-live="polite">
+    مرحبًا بك في ود فيصل V3. اختر ملف إعداد للبدء.
+  </div>
 
-      } else if (type === "connecting" || type === "disconnecting") {
-        statusPill.classList.add("loading");
-        statusLabel.textContent =
-          type === "connecting" ? "جارٍ الاتصال" : "جارٍ الفصل";
-        connectionTitle.textContent =
-          type === "connecting" ? "جارٍ إنشاء الاتصال" : "جارٍ فصل الاتصال";
-        connecting = true;
+  <footer class="footer">
+    <strong>ود فيصل V3</strong><br>
+    واجهة محلية · إدارة إعدادات الاتصال<br>
+    <span>احفظ ملفات الإعداد الخاصة بك في مكان آمن.</span>
+  </footer>
 
-      } else if (type === "error") {
-        statusPill.classList.add("error");
-        statusLabel.textContent = "تعذر إكمال العملية";
-        connectionTitle.textContent = "لم يكتمل الاتصال";
-        connecting = false;
-        connected = false;
+</main>
 
-      } else if (type === "config_loaded") {
-        statusLabel.textContent = "الإعداد جاهز";
-        connectionTitle.textContent = "جاهز للاتصال";
-        configSelected = true;
-        connecting = false;
-        connected = false;
-        configDescription.textContent = "تم تحميل ملف إعداد WireGuard";
+<script>
+"use strict";
 
-      } else if (type === "config_required") {
-        statusLabel.textContent = "يلزم إعداد";
-        connectionTitle.textContent = "اختر ملف إعداد أولًا";
-        connecting = false;
-        connected = false;
+let configLoaded = false;
+let isConnected = false;
+let isBusy = false;
 
-      } else if (type === "busy") {
-        statusLabel.textContent = "انتظر قليلًا";
-        connectionTitle.textContent = "العملية قيد التنفيذ";
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+const configName = document.getElementById("configName");
+const configHint = document.getElementById("configHint");
+const importBtn = document.getElementById("importBtn");
+const exportBtn = document.getElementById("exportBtn");
+const connectBtn = document.getElementById("connectBtn");
+const disconnectBtn = document.getElementById("disconnectBtn");
+const messageBox = document.getElementById("messageBox");
 
-      } else {
-        statusLabel.textContent = "جاهز";
-        connectionTitle.textContent = "غير متصل";
-        connecting = false;
-        connected = false;
-      }
+function showMessage(message, type = "info") {
+  messageBox.textContent = message;
+  messageBox.className = "message show " + type;
+}
 
-      chooseButton.disabled = connecting || connected;
-      connectButton.disabled = connecting || connected;
-      disconnectButton.disabled = connecting || !connected;
-    }
+function setStatus(message, type = "ready") {
+  statusText.textContent = message;
+  statusDot.className = "dot " + type;
+}
 
-    function showBridgeError() {
-      renderState(
-        "error",
-        "تعذر الوصول إلى وظائف Android. افتح التطبيق المثبت على الهاتف."
-      );
-    }
+function updateButtons() {
+  exportBtn.disabled = !configLoaded || isBusy;
+  importBtn.disabled = isBusy;
+  connectBtn.disabled = isBusy || isConnected;
+  disconnectBtn.disabled = isBusy || !isConnected;
 
-    function selectConfig() {
-      if (!window.WoodeVPN ||
-          typeof window.WoodeVPN.selectConfig !== "function") {
-        showBridgeError();
-        return;
-      }
+  connectBtn.style.display = isConnected ? "none" : "block";
+  disconnectBtn.style.display = isConnected ? "block" : "none";
 
-      window.WoodeVPN.selectConfig();
-    }
+  if (isBusy) {
+    connectBtn.textContent = "جارٍ تنفيذ العملية...";
+  } else {
+    connectBtn.textContent = configLoaded
+      ? "تشغيل الاتصال"
+      : "اختر إعدادًا أولًا";
+  }
+}
 
-    function connectVPN() {
-      if (connecting || connected) return;
-
-      if (!window.WoodeVPN ||
-          typeof window.WoodeVPN.connect !== "function") {
-        showBridgeError();
-        return;
-      }
-
-      window.WoodeVPN.connect();
-    }
-
-    function disconnectVPN() {
-      if (connecting || !connected) return;
-
-      if (!window.WoodeVPN ||
-          typeof window.WoodeVPN.disconnect !== "function") {
-        showBridgeError();
-        return;
-      }
-
-      window.WoodeVPN.disconnect();
-    }
-
-    window.onNativeVpnEvent = function (event) {
-      if (!event || typeof event !== "object") return;
-
-      const type = String(event.type || "ready");
-      const message = String(event.message || "");
-
-      if (type === "config_loaded") {
-        configSelected = true;
-        configDescription.textContent = "تم تحميل ملف إعداد WireGuard";
-      }
-
-      if (type === "disconnected") {
-        connected = false;
-        connecting = false;
-
-        configDescription.textContent = configSelected
-          ? "تم تحميل ملف إعداد WireGuard"
-          : "لم يتم اختيار ملف إعداد بعد";
-      }
-
-      renderState(type, message);
-    };
-
-    renderState(
-      "ready",
-      "اختر ملف إعداد متوافقًا مع محرك الاتصال الحالي للبدء."
+function nativeBridge() {
+  if (!window.WoodeVPN) {
+    showMessage(
+      "تعذر الوصول إلى خدمات التطبيق. افتح التطبيق الأصلي على أندرويد.",
+      "error"
     );
-  </script>
+    return null;
+  }
+  return window.WoodeVPN;
+}
+
+function chooseConfig() {
+  const bridge = nativeBridge();
+  if (bridge && !isBusy) {
+    bridge.selectConfig();
+  }
+}
+
+function exportConfig() {
+  const bridge = nativeBridge();
+  if (bridge && configLoaded && !isBusy) {
+    bridge.exportConfig();
+  }
+}
+
+function connectVPN() {
+  const bridge = nativeBridge();
+
+  if (!bridge || isBusy || isConnected) return;
+
+  if (!configLoaded) {
+    showMessage("استورد ملف WireGuard أو WDF قبل تشغيل الاتصال.", "error");
+    return;
+  }
+
+  bridge.connect();
+}
+
+function disconnectVPN() {
+  const bridge = nativeBridge();
+
+  if (bridge && !isBusy && isConnected) {
+    bridge.disconnect();
+  }
+}
+
+window.onNativeVpnEvent = function(event) {
+  if (!event || typeof event !== "object") return;
+
+  const type = String(event.type || "");
+  const message = String(event.message || "");
+
+  switch (type) {
+    case "ready":
+      setStatus("جاهز للاستخدام", "ready");
+      showMessage(message || "واجهة التطبيق جاهزة.", "info");
+      break;
+
+    case "config_loaded":
+      configLoaded = true;
+      configName.textContent = "تم تحميل الإعداد";
+      configHint.textContent = "ملف صالح تم استيراده";
+      setStatus("الإعداد جاهز", "ready");
+      showMessage(message || "تم تحميل ملف الإعداد.", "success");
+      break;
+
+    case "config_exported":
+      showMessage(message || "تم تصدير الملف.", "success");
+      break;
+
+    case "config_required":
+      showMessage(message || "اختر ملف إعداد أولًا.", "error");
+      break;
+
+    case "connecting":
+    case "disconnecting":
+      isBusy = true;
+      setStatus(message || "جارٍ تنفيذ العملية...", "connecting");
+      showMessage(message || "يرجى الانتظار...", "info");
+      break;
+
+    case "connected":
+      isBusy = false;
+      isConnected = event.connected === true || type === "connected";
+      setStatus(message || "الاتصال نشط", "connected");
+      showMessage(message || "تم الاتصال.", "success");
+      break;
+
+    case "disconnected":
+      isBusy = false;
+      isConnected = false;
+      setStatus(message || "غير متصل", "ready");
+      showMessage(message || "تم فصل الاتصال.", "info");
+      break;
+
+    case "busy":
+      isBusy = false;
+      showMessage(message || "هناك عملية قيد التنفيذ.", "info");
+      break;
+
+    case "error":
+      isBusy = false;
+      showMessage(message || "حدث خطأ.", "error");
+      setStatus("حدث خطأ", "error");
+      break;
+
+    default:
+      if (message) {
+        showMessage(message, "info");
+      }
+      break;
+  }
+
+  updateButtons();
+};
+
+updateButtons();
+</script>
 </body>
 </html>
