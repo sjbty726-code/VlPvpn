@@ -2,730 +2,668 @@
 package com.woode.vpn
 
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import android.net.VpnService
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.util.Base64
-import android.webkit.JavascriptInterface
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
-import android.webkit.WebViewClient
-
-import androidx.webkit.WebViewAssetLoader
-
-import com.wireguard.android.backend.GoBackend
-import com.wireguard.android.backend.Tunnel
-import com.wireguard.config.Config
-
-import org.json.JSONObject
-
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-import java.util.concurrent.Executors
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
+import kotlin.math.abs
 
 class MainActivity : Activity() {
 
+    private lateinit var detailsPanel: LinearLayout
+    private lateinit var dragHint: TextView
+    private var detailsOpen = false
+
     companion object {
-        private const val REQUEST_CONFIG = 2101
-        private const val REQUEST_VPN_PERMISSION = 2102
-        private const val REQUEST_EXPORT_CONFIG = 2103
-
-        private const val ASSET_HOST =
-            "appassets.androidplatform.net"
-
-        private const val ASSET_BASE_URL =
-            "https://appassets.androidplatform.net/assets/"
-
-        // الحد الأقصى لملف الإعداد: 1 ميغابايت
-        private const val MAX_CONFIG_BYTES = 1024 * 1024
-
-        // إصدار صيغة ملفات ود فيصل
-        private const val WDF_VERSION = 1
-    }
-
-    private lateinit var webView: WebView
-    private lateinit var assetLoader: WebViewAssetLoader
-
-    private val executor = Executors.newSingleThreadExecutor()
-
-    @Volatile
-    private var activityDestroyed = false
-
-    private val backend: GoBackend by lazy {
-        GoBackend(applicationContext)
-    }
-
-    private var selectedConfig: Config? = null
-
-    // نحتفظ بمحتوى الإعداد للتحقق منه وتصديره لاحقًا.
-    private var selectedConfigBytes: ByteArray? = null
-
-    private var connectionInProgress = false
-
-    private val tunnel = object : Tunnel {
-
-        override fun getName(): String = "woodevpn"
-
-        override fun onStateChange(newState: Tunnel.State) {
-            val isUp = newState == Tunnel.State.UP
-
-            publish(
-                if (isUp) "connected" else "disconnected",
-                if (isUp) {
-                    "اتصال WireGuard نشط"
-                } else {
-                    "نفق VPN غير متصل"
-                },
-                isUp
-            )
-        }
+        private val BG = Color.rgb(5, 13, 27)
+        private val CARD = Color.rgb(13, 29, 52)
+        private val BLUE = Color.rgb(0, 174, 255)
+        private val CYAN = Color.rgb(61, 218, 255)
+        private val WHITE = Color.rgb(242, 248, 255)
+        private val MUTED = Color.rgb(145, 165, 190)
+        private val GREEN = Color.rgb(45, 215, 145)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        assetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler(
-                "/assets/",
-                WebViewAssetLoader.AssetsPathHandler(this)
+        window.statusBarColor = BG
+        window.navigationBarColor = BG
+        window.decorView.systemUiVisibility = 0
+
+        buildScreen()
+    }
+
+    private fun buildScreen() {
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setBackgroundColor(BG)
+        }
+
+        val scroll = ScrollView(this).apply {
+            fillViewport = true
+            clipToPadding = false
+        }
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(20), dp(20), dp(20), dp(24))
+        }
+
+        scroll.addView(
+            content,
+            ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            .build()
-
-        webView = WebView(this)
-
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = false
-
-            allowFileAccess = false
-            allowContentAccess = false
-
-            javaScriptCanOpenWindowsAutomatically = false
-            setSupportMultipleWindows(false)
-
-            mixedContentMode =
-                android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
-        }
-
-        webView.addJavascriptInterface(
-            VpnBridge(),
-            "WoodeVPN"
         )
 
-        webView.webViewClient = object : WebViewClient() {
-
-            override fun shouldInterceptRequest(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): WebResourceResponse {
-                val uri = request?.url
-
-                if (uri != null && isLocalAssetUrl(uri)) {
-                    return assetLoader.shouldInterceptRequest(uri)
-                        ?: blockedResponse()
-                }
-
-                // منع تحميل موارد الواجهة من مواقع خارجية.
-                return blockedResponse()
-            }
-
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
-                val uri = request?.url ?: return true
-                return !isLocalAssetUrl(uri)
-            }
-
-            override fun onPageFinished(
-                view: WebView?,
-                url: String?
-            ) {
-                super.onPageFinished(view, url)
-
-                if (url != null &&
-                    isLocalAssetUrl(Uri.parse(url))
-                ) {
-                    publish(
-                        "ready",
-                        "واجهة ود فيصل V3 جاهزة"
-                    )
-                }
-            }
-        }
-
-        setContentView(webView)
-
-        webView.loadUrl(
-            ASSET_BASE_URL + "index.html"
+        root.addView(
+            scroll,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
         )
-    }
 
-    private fun isLocalAssetUrl(uri: Uri): Boolean {
-        return uri.scheme == "https" &&
-            uri.host == ASSET_HOST &&
-            (uri.path?.startsWith("/assets/") == true)
-    }
-
-    private fun blockedResponse(): WebResourceResponse {
-        return WebResourceResponse(
-            "text/plain",
-            "UTF-8",
-            403,
-            "Blocked by application policy",
-            emptyMap<String, String>(),
-            ByteArrayInputStream(ByteArray(0))
+        root.addView(
+            buildBottomNavigation(),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(68)
+            )
         )
-    }
 
-    private inner class VpnBridge {
+        setContentView(root)
 
-        @JavascriptInterface
-        fun selectConfig() {
-            runOnUiThread {
-                if (!activityDestroyed) {
-                    openConfigPicker()
-                }
+        // رأس التطبيق
+        content.addView(buildHeader())
+        addSpace(content, 24)
+
+        addText(
+            content,
+            "اتصالك بالإنترنت يبدأ من هنا",
+            21f,
+            WHITE,
+            true,
+            Gravity.CENTER
+        )
+
+        addSpace(content, 8)
+
+        addText(
+            content,
+            "حماية وخصوصية وتجربة اتصال سهلة",
+            13f,
+            MUTED,
+            false,
+            Gravity.CENTER
+        )
+
+        addSpace(content, 25)
+
+        // حالة الاتصال
+        val status = makePill("●  غير متصل", GREEN)
+        content.addView(
+            status,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER
             }
-        }
+        )
 
-        @JavascriptInterface
-        fun exportConfig() {
-            runOnUiThread {
-                if (!activityDestroyed) {
-                    openExportPicker()
-                }
+        addSpace(content, 18)
+
+        // زر الاتصال
+        val connectionButton = buildConnectionButton()
+
+        content.addView(
+            connectionButton,
+            LinearLayout.LayoutParams(dp(160), dp(160)).apply {
+                gravity = Gravity.CENTER
             }
-        }
+        )
 
-        @JavascriptInterface
-        fun connect() {
-            runOnUiThread {
-                if (!activityDestroyed) {
-                    requestConnection()
-                }
-            }
-        }
+        addSpace(content, 12)
 
-        @JavascriptInterface
-        fun disconnect() {
-            runOnUiThread {
-                if (!activityDestroyed) {
-                    disconnectTunnel()
-                }
-            }
-        }
-    }
+        addText(
+            content,
+            "اضغط زر الاتصال لبدء التجربة",
+            13f,
+            MUTED,
+            false,
+            Gravity.CENTER
+        )
 
-    private fun openConfigPicker() {
-        val intent = Intent(
-            Intent.ACTION_OPEN_DOCUMENT
+        addSpace(content, 25)
+
+        // لوحة الخادم
+        content.addView(buildServerCard())
+
+        addSpace(content, 16)
+
+        // تلميح السحب
+        dragHint = addText(
+            content,
+            "⌄  اسحب للأسفل لعرض بيانات الخادم والتفاصيل",
+            13f,
+            CYAN,
+            true,
+            Gravity.CENTER
         ).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
+            setPadding(dp(8), dp(15), dp(8), dp(15))
+            isClickable = true
+            setOnClickListener { toggleDetails() }
         }
 
-        try {
-            startActivityForResult(
-                intent,
-                REQUEST_CONFIG
-            )
-        } catch (_: Exception) {
-            publish(
-                "error",
-                "تعذر فتح مستعرض الملفات"
-            )
-        }
-    }
+        dragHint.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    downY = event.rawY
+                    true
+                }
 
-    private fun openExportPicker() {
-        if (selectedConfig == null ||
-            selectedConfigBytes == null
-        ) {
-            publish(
-                "config_required",
-                "حمّل إعدادًا صالحًا قبل التصدير"
-            )
-            return
+                MotionEvent.ACTION_UP -> {
+                    val distance = event.rawY - downY
+
+                    when {
+                        distance > dp(30) -> showDetails()
+                        distance < -dp(30) -> hideDetails()
+                        abs(distance) < dp(10) -> toggleDetails()
+                    }
+                    true
+                }
+
+                else -> true
+            }
         }
 
-        val intent = Intent(
-            Intent.ACTION_CREATE_DOCUMENT
-        ).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/json"
-            putExtra(
-                Intent.EXTRA_TITLE,
-                "wad-faisal-profile.wdf"
-            )
+        // تفاصيل الخادم والبيانات
+        detailsPanel = buildDetailsPanel().apply {
+            visibility = View.GONE
         }
 
-        try {
-            startActivityForResult(
-                intent,
-                REQUEST_EXPORT_CONFIG
+        content.addView(
+            detailsPanel,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
-        } catch (_: Exception) {
-            publish(
-                "error",
-                "تعذر فتح نافذة حفظ الملف"
-            )
-        }
-    }
-
-    @Deprecated("Uses the activity result API for compatibility")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?
-    ) {
-        super.onActivityResult(
-            requestCode,
-            resultCode,
-            data
         )
 
-        if (activityDestroyed) return
+        addSpace(content, 12)
 
-        when (requestCode) {
-
-            REQUEST_CONFIG -> {
-                if (resultCode != RESULT_OK) {
-                    publish(
-                        "ready",
-                        "لم يتم اختيار ملف إعداد"
-                    )
-                    return
-                }
-
-                val uri = data?.data
-
-                if (uri == null) {
-                    publish(
-                        "error",
-                        "تعذر الوصول إلى الملف المختار"
-                    )
-                    return
-                }
-
-                importConfig(uri)
-            }
-
-            REQUEST_EXPORT_CONFIG -> {
-                if (resultCode != RESULT_OK) {
-                    publish(
-                        "ready",
-                        "تم إلغاء حفظ الإعداد"
-                    )
-                    return
-                }
-
-                val uri = data?.data
-
-                if (uri == null) {
-                    publish(
-                        "error",
-                        "تعذر الوصول إلى مكان الحفظ"
-                    )
-                    return
-                }
-
-                exportConfigTo(uri)
-            }
-
-            REQUEST_VPN_PERMISSION -> {
-                if (resultCode == RESULT_OK) {
-                    startTunnel()
-                } else {
-                    publish(
-                        "error",
-                        "لم تتم الموافقة على إذن VPN"
-                    )
-                }
-            }
-        }
+        addText(
+            content,
+            "ود فيصل VPN",
+            12f,
+            MUTED,
+            true,
+            Gravity.CENTER
+        )
     }
 
-    private fun importConfig(uri: Uri) {
-        try {
-            val fileBytes = contentResolver
-                .openInputStream(uri)
-                ?.use { input ->
-                    readLimited(input, MAX_CONFIG_BYTES)
-                }
-                ?: throw IllegalArgumentException(
-                    "تعذر قراءة الملف"
+    private var downY = 0f
+
+    private fun buildHeader(): LinearLayout {
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+
+        val logo = TextView(this).apply {
+            text = "و"
+            textSize = 27f
+            gravity = Gravity.CENTER
+            setTextColor(WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(0, 105, 195),
+                    Color.rgb(0, 210, 255)
                 )
-
-            require(fileBytes.isNotEmpty()) {
-                "ملف فارغ"
+            ).apply {
+                cornerRadius = dp(16).toFloat()
             }
-
-            // يقبل ملف WireGuard المعتاد أو ملف WDF الخاص بنا.
-            val configBytes = decodeImportedConfig(fileBytes)
-
-            val config = Config.parse(
-                ByteArrayInputStream(configBytes)
-            )
-
-            require(config.peers.isNotEmpty()) {
-                "الإعداد لا يحتوي على خادم WireGuard"
-            }
-
-            selectedConfig = config
-            selectedConfigBytes = configBytes.copyOf()
-
-            publish(
-                "config_loaded",
-                "تم تحميل إعداد ود فيصل بنجاح"
-            )
-
-        } catch (_: Exception) {
-            selectedConfig = null
-            selectedConfigBytes = null
-
-            publish(
-                "error",
-                "تعذر قراءة الإعداد. تحقق من صحة ملف WireGuard أو WDF."
-            )
-        }
-    }
-
-    /**
-     * صيغة WDF الحالية:
-     * {
-     *   "format": "WDF",
-     *   "version": 1,
-     *   "engine": "wireguard",
-     *   "payload": "Base64 لمحتوى ملف WireGuard"
-     * }
-     */
-    private fun decodeImportedConfig(
-        fileBytes: ByteArray
-    ): ByteArray {
-        val text = String(
-            fileBytes,
-            StandardCharsets.UTF_8
-        ).trim()
-
-        if (!text.startsWith("{")) {
-            // ملف WireGuard عادي.
-            return fileBytes
         }
 
-        val json = JSONObject(text)
-
-        if (json.optString("format") != "WDF") {
-            // سيجري التحقق منه لاحقًا بواسطة محلل WireGuard.
-            return fileBytes
-        }
-
-        require(json.optInt("version", -1) == WDF_VERSION) {
-            "إصدار WDF غير مدعوم"
-        }
-
-        require(json.optString("engine") == "wireguard") {
-            "محرك الاتصال الموجود في الملف غير مدعوم"
-        }
-
-        val payload = json.optString("payload", "")
-
-        require(payload.isNotBlank()) {
-            "محتوى ملف WDF فارغ"
-        }
-
-        val decoded = Base64.decode(
-            payload,
-            Base64.DEFAULT
+        header.addView(
+            logo,
+            LinearLayout.LayoutParams(dp(52), dp(52))
         )
 
-        require(decoded.isNotEmpty()) {
-            "محتوى إعداد WDF فارغ"
+        val brand = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(12), 0, dp(8), 0)
         }
 
-        require(decoded.size <= MAX_CONFIG_BYTES) {
-            "حجم الإعداد أكبر من الحد المسموح"
+        addText(brand, "ود فيصل VPN", 19f, WHITE, true)
+        addText(brand, "اتصال آمن • تجربة ملكية", 11f, MUTED)
+
+        header.addView(
+            brand,
+            LinearLayout.LayoutParams(0, -2, 1f)
+        )
+
+        val settings = TextView(this).apply {
+            text = "⚙"
+            textSize = 25f
+            gravity = Gravity.CENTER
+            setTextColor(CYAN)
+            background = roundedBackground(CARD, Color.rgb(30, 67, 100), 15)
+            setOnClickListener {
+                showMessage("الإعدادات ستتم إضافتها لاحقاً")
+            }
         }
 
-        return decoded
+        header.addView(
+            settings,
+            LinearLayout.LayoutParams(dp(48), dp(48))
+        )
+
+        return header
     }
 
-    private fun readLimited(
-        input: InputStream,
-        maxBytes: Int
-    ): ByteArray {
-        val output = ByteArrayOutputStream()
-        val buffer = ByteArray(8192)
-        var total = 0
+    private fun buildConnectionButton(): FrameLayout {
+        val outer = FrameLayout(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(0, 67, 125),
+                    Color.rgb(0, 30, 70)
+                )
+            ).apply {
+                shape = GradientDrawable.OVAL
+                setStroke(dp(3), BLUE)
+            }
+        }
 
-        while (true) {
-            val count = input.read(buffer)
+        val inner = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(0, 143, 225),
+                    Color.rgb(0, 65, 135)
+                )
+            ).apply {
+                shape = GradientDrawable.OVAL
+                setStroke(dp(2), CYAN)
+            }
+        }
 
-            if (count == -1) break
+        addText(
+            inner,
+            "⏻",
+            43f,
+            WHITE,
+            true,
+            Gravity.CENTER
+        )
 
-            total += count
+        addText(
+            inner,
+            "اتصال",
+            17f,
+            WHITE,
+            true,
+            Gravity.CENTER
+        )
 
-            require(total <= maxBytes) {
-                "حجم الملف أكبر من الحد المسموح"
+        outer.addView(
+            inner,
+            FrameLayout.LayoutParams(
+                dp(125),
+                dp(125),
+                Gravity.CENTER
+            )
+        )
+
+        outer.setOnClickListener {
+            showMessage(
+                "هذه واجهة التصميم حالياً. تفعيل VPN يحتاج خادماً حقيقياً وإعداداته."
+            )
+        }
+
+        return outer
+    }
+
+    private fun buildServerCard(): LinearLayout {
+        val card = makeCard()
+
+        val heading = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+
+        val title = TextView(this).apply {
+            text = "🌐  أفضل خادم وأقرب خادم"
+            textSize = 15f
+            setTextColor(WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        heading.addView(
+            title,
+            LinearLayout.LayoutParams(0, -2, 1f)
+        )
+
+        heading.addView(makePill("تلقائي", CYAN))
+
+        card.addView(heading)
+        addSpace(card, 17)
+
+        addText(
+            card,
+            "لم يتم ربط الخوادم بعد",
+            16f,
+            CYAN,
+            true
+        )
+
+        addSpace(card, 7)
+
+        addText(
+            card,
+            "سيتم اختيار الخادم الأفضل بعد إضافة الخوادم وإجراء اختبار الاستجابة.",
+            12f,
+            MUTED
+        )
+
+        return card
+    }
+
+    private fun buildDetailsPanel(): LinearLayout {
+        val card = makeCard()
+
+        addText(
+            card,
+            "تفاصيل الاتصال",
+            18f,
+            WHITE,
+            true
+        )
+
+        addSpace(card, 15)
+
+        addInfoRow("حالة الاتصال", "غير متصل")
+        addDivider(card)
+
+        addInfoRow("الخادم الحالي", "غير محدد")
+        addDivider(card)
+
+        addInfoRow("موقع الخادم", "بانتظار الخوادم")
+        addDivider(card)
+
+        addInfoRow("سرعة التحميل", "— Mbps")
+        addDivider(card)
+
+        addInfoRow("سرعة الرفع", "— Mbps")
+        addDivider(card)
+
+        addInfoRow("زمن الاستجابة Ping", "— ms")
+        addDivider(card)
+
+        addInfoRow("استهلاك البيانات", "0 MB")
+        addDivider(card)
+
+        addInfoRow("البروتوكول", "WireGuard")
+        addDivider(card)
+
+        addInfoRow("تقييم السرعة", "FAST بعد الاختبار")
+
+        addSpace(card, 20)
+
+        val testButton = TextView(this).apply {
+            text = "اختبار سرعة الإنترنت"
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(dp(12), dp(15), dp(12), dp(15))
+            background = roundedBackground(BLUE, BLUE, 15)
+            setOnClickListener {
+                showMessage(
+                    "اختبار السرعة الحقيقي سيتاح بعد تشغيل الاتصال بالخادم."
+                )
+            }
+        }
+
+        card.addView(
+            testButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        addSpace(card, 10)
+
+        addText(
+            card,
+            "ملاحظة: السرعة والخادم سيظهران من البيانات الحقيقية بعد ربط الخدمة.",
+            11f,
+            MUTED,
+            false,
+            Gravity.CENTER
+        )
+
+        return card
+    }
+
+    private fun buildBottomNavigation(): LinearLayout {
+        val nav = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.rgb(8, 20, 37))
+            setPadding(dp(5), dp(5), dp(5), dp(5))
+        }
+
+        val items = listOf(
+            "⌂\nالرئيسية",
+            "▣\nالخوادم",
+            "◷\nالإحصائيات",
+            "⚙\nالإعدادات"
+        )
+
+        items.forEachIndexed { index, item ->
+            val tab = TextView(this).apply {
+                text = item
+                textSize = 12f
+                gravity = Gravity.CENTER
+                setTextColor(if (index == 0) CYAN else MUTED)
+                setOnClickListener {
+                    if (index == 0) {
+                        showMessage("أنت في الصفحة الرئيسية")
+                    } else {
+                        showMessage("هذا القسم سيتم تفعيله لاحقاً")
+                    }
+                }
             }
 
-            output.write(buffer, 0, count)
+            nav.addView(
+                tab,
+                LinearLayout.LayoutParams(0, -1, 1f)
+            )
         }
 
-        return output.toByteArray()
+        return nav
     }
 
-    private fun exportConfigTo(uri: Uri) {
-        try {
-            val configBytes = selectedConfigBytes
-                ?: throw IllegalStateException(
-                    "لا يوجد إعداد محمّل"
+    private fun addInfoRow(title: String, value: String) {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(11), 0, dp(11))
+        }
+
+        val left = TextView(this).apply {
+            text = title
+            textSize = 13f
+            setTextColor(MUTED)
+        }
+
+        val right = TextView(this).apply {
+            text = value
+            textSize = 13f
+            setTextColor(WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.END
+        }
+
+        row.addView(left, LinearLayout.LayoutParams(0, -2, 1f))
+        row.addView(right)
+
+        detailsPanel.addView(row)
+    }
+
+    private fun addDivider(parent: LinearLayout) {
+        val divider = View(this).apply {
+            setBackgroundColor(Color.rgb(34, 58, 83))
+        }
+
+        parent.addView(
+            divider,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(1)
+            )
+        )
+    }
+
+    private fun makeCard(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(17), dp(18), dp(17), dp(18))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(17, 39, 67),
+                    Color.rgb(9, 23, 43)
                 )
-
-            val json = JSONObject()
-                .put("format", "WDF")
-                .put("version", WDF_VERSION)
-                .put("engine", "wireguard")
-                .put(
-                    "payload",
-                    Base64.encodeToString(
-                        configBytes,
-                        Base64.NO_WRAP
-                    )
-                )
-
-            val outputBytes = json
-                .toString(2)
-                .toByteArray(StandardCharsets.UTF_8)
-
-            val output = contentResolver.openOutputStream(uri)
-                ?: throw IllegalStateException(
-                    "تعذر فتح الملف للحفظ"
-                )
-
-            output.use {
-                it.write(outputBytes)
-                it.flush()
+            ).apply {
+                cornerRadius = dp(21).toFloat()
+                setStroke(dp(1), Color.rgb(29, 71, 110))
             }
+        }
+    }
 
-            publish(
-                "config_exported",
-                "تم حفظ إعداد ود فيصل بصيغة WDF"
-            )
-
-        } catch (_: Exception) {
-            publish(
-                "error",
-                "فشل تصدير الإعداد. حاول الحفظ في مكان آخر."
+    private fun makePill(
+        value: String,
+        color: Int
+    ): TextView {
+        return TextView(this).apply {
+            text = value
+            textSize = 11f
+            gravity = Gravity.CENTER
+            setTextColor(color)
+            setPadding(dp(12), dp(7), dp(12), dp(7))
+            background = roundedBackground(
+                Color.rgb(13, 43, 68),
+                Color.rgb(30, 100, 140),
+                30
             )
         }
     }
 
-    private fun requestConnection() {
-        if (connectionInProgress) return
-
-        if (selectedConfig == null) {
-            publish(
-                "config_required",
-                "اختر ملف إعداد WireGuard أو WDF أولًا"
-            )
-            return
+    private fun roundedBackground(
+        fill: Int,
+        stroke: Int,
+        radius: Int
+    ): GradientDrawable {
+        return GradientDrawable().apply {
+            setColor(fill)
+            cornerRadius = dp(radius).toFloat()
+            setStroke(dp(1), stroke)
         }
+    }
 
-        try {
-            val permissionIntent = VpnService.prepare(this)
+    private fun addText(
+        parent: LinearLayout,
+        value: String,
+        size: Float,
+        color: Int,
+        bold: Boolean = false,
+        gravity: Int = Gravity.START
+    ): TextView {
+        val view = TextView(this).apply {
+            text = value
+            textSize = size
+            setTextColor(color)
+            this.gravity = gravity
 
-            if (permissionIntent != null) {
-                startActivityForResult(
-                    permissionIntent,
-                    REQUEST_VPN_PERMISSION
-                )
+            typeface = if (bold) {
+                Typeface.create("sans-serif", Typeface.BOLD)
             } else {
-                startTunnel()
+                Typeface.create("sans-serif", Typeface.NORMAL)
             }
-
-        } catch (_: Exception) {
-            publish(
-                "error",
-                "تعذر طلب إذن VPN من النظام"
-            )
         }
+
+        parent.addView(view)
+        return view
     }
 
-    private fun startTunnel() {
-        val config = selectedConfig
-
-        if (config == null) {
-            publish(
-                "config_required",
-                "اختر ملف الإعداد أولًا"
+    private fun addSpace(parent: LinearLayout, height: Int) {
+        parent.addView(
+            View(this),
+            LinearLayout.LayoutParams(
+                1,
+                dp(height)
             )
-            return
-        }
-
-        if (connectionInProgress) return
-
-        connectionInProgress = true
-
-        publish(
-            "connecting",
-            "جارٍ تشغيل نفق WireGuard"
         )
+    }
 
-        executor.execute {
-            try {
-                val result = backend.setState(
-                    tunnel,
-                    Tunnel.State.UP,
-                    config
-                )
-
-                val confirmed =
-                    result == Tunnel.State.UP &&
-                    backend.getState(tunnel) == Tunnel.State.UP
-
-                runOnUiThread {
-                    if (activityDestroyed) return@runOnUiThread
-
-                    connectionInProgress = false
-
-                    if (confirmed) {
-                        publish(
-                            "connected",
-                            "اتصال WireGuard نشط",
-                            true
-                        )
-                    } else {
-                        publish(
-                            "error",
-                            "لم يتم تأكيد حالة النفق"
-                        )
-                    }
-                }
-
-            } catch (_: Exception) {
-                runOnUiThread {
-                    if (activityDestroyed) return@runOnUiThread
-
-                    connectionInProgress = false
-
-                    publish(
-                        "error",
-                        "فشل تشغيل النفق. تحقق من إعداد الخادم والمفاتيح."
-                    )
-                }
-            }
+    private fun toggleDetails() {
+        if (detailsOpen) {
+            hideDetails()
+        } else {
+            showDetails()
         }
     }
 
-    private fun disconnectTunnel() {
-        if (connectionInProgress) {
-            publish(
-                "busy",
-                "انتظر انتهاء العملية الحالية"
-            )
-            return
-        }
-
-        connectionInProgress = true
-
-        publish(
-            "disconnecting",
-            "جارٍ فصل اتصال VPN"
-        )
-
-        executor.execute {
-            try {
-                backend.setState(
-                    tunnel,
-                    Tunnel.State.DOWN,
-                    null
-                )
-
-                val confirmed =
-                    backend.getState(tunnel) == Tunnel.State.DOWN
-
-                runOnUiThread {
-                    if (activityDestroyed) return@runOnUiThread
-
-                    connectionInProgress = false
-
-                    if (confirmed) {
-                        publish(
-                            "disconnected",
-                            "تم فصل اتصال VPN",
-                            false
-                        )
-                    } else {
-                        publish(
-                            "error",
-                            "تعذر تأكيد فصل النفق"
-                        )
-                    }
-                }
-
-            } catch (_: Exception) {
-                runOnUiThread {
-                    if (activityDestroyed) return@runOnUiThread
-
-                    connectionInProgress = false
-
-                    publish(
-                        "error",
-                        "حدث خطأ أثناء فصل اتصال VPN"
-                    )
-                }
-            }
-        }
+    private fun showDetails() {
+        detailsOpen = true
+        detailsPanel.visibility = View.VISIBLE
+        dragHint.text = "⌃  اضغط هنا لإخفاء التفاصيل"
     }
 
-    private fun publish(
-        type: String,
-        message: String,
-        connected: Boolean? = null
-    ) {
-        if (activityDestroyed || !::webView.isInitialized) {
-            return
-        }
-
-        val event = JSONObject()
-            .put("type", type)
-            .put("message", message)
-
-        if (connected != null) {
-            event.put("connected", connected)
-        }
-
-        val json = event.toString()
-
-        runOnUiThread {
-            if (activityDestroyed || !::webView.isInitialized) {
-                return@runOnUiThread
-            }
-
-            webView.evaluateJavascript(
-                "window.onNativeVpnEvent && " +
-                    "window.onNativeVpnEvent($json);",
-                null
-            )
-        }
+    private fun hideDetails() {
+        detailsOpen = false
+        detailsPanel.visibility = View.GONE
+        dragHint.text = "⌄  اسحب للأسفل لعرض بيانات الخادم والتفاصيل"
     }
 
-    override fun onDestroy() {
-        activityDestroyed = true
+    private fun showMessage(message: String) {
+        Toast.makeText(
+            this,
+            message,
+            Toast.LENGTH_LONG
+        ).show()
+    }
 
-        if (::webView.isInitialized) {
-            webView.stopLoading()
-            webView.removeJavascriptInterface("WoodeVPN")
-            webView.destroy()
-        }
-
-        executor.shutdown()
-
-        super.onDestroy()
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 }
