@@ -12,39 +12,26 @@ android {
         applicationId = "com.woode.vpn"
         minSdk = 23
         targetSdk = 35
-
-        // رقم البناء التالي بعد الإصدار السابق
-        versionCode = 2
-
-        // اسم الإصدار الجديد
-        versionName = "3.0.0"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
         }
+
+        debug {
+            isMinifyEnabled = false
+        }
     }
-}
 
-dependencies {
-    // محرك اتصال WireGuard الحالي
-    implementation("com.wireguard.android:tunnel:1.0.20250531")
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
-    // عرض واجهة التطبيق المحلية
-    implementation("androidx.webkit:webkit:1.14.0")
-
-    coreLibraryDesugaring(
-        "com.android.tools:desugar_jdk_libs:2.1.5"
-    )
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
