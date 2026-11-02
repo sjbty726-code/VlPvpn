@@ -15,12 +15,13 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import kotlin.math.abs
 
 class MainActivity : Activity() {
 
     private lateinit var detailsPanel: LinearLayout
     private lateinit var dragHint: TextView
+
+    private var startY = 0f
     private var detailsOpen = false
 
     companion object {
@@ -38,7 +39,6 @@ class MainActivity : Activity() {
 
         window.statusBarColor = BG
         window.navigationBarColor = BG
-        window.decorView.systemUiVisibility = 0
 
         buildScreen()
     }
@@ -52,7 +52,6 @@ class MainActivity : Activity() {
 
         val scroll = ScrollView(this).apply {
             fillViewport = true
-            clipToPadding = false
         }
 
         val content = LinearLayout(this).apply {
@@ -61,13 +60,7 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(20), dp(20), dp(24))
         }
 
-        scroll.addView(
-            content,
-            ScrollView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
+        scroll.addView(content)
 
         root.addView(
             scroll,
@@ -88,9 +81,8 @@ class MainActivity : Activity() {
 
         setContentView(root)
 
-        // رأس التطبيق
         content.addView(buildHeader())
-        addSpace(content, 24)
+        addGap(content, 25)
 
         addText(
             content,
@@ -101,62 +93,57 @@ class MainActivity : Activity() {
             Gravity.CENTER
         )
 
-        addSpace(content, 8)
+        addGap(content, 8)
 
         addText(
             content,
-            "حماية وخصوصية وتجربة اتصال سهلة",
+            "حماية وخصوصية وتجربة اتصال ملكية",
             13f,
             MUTED,
             false,
             Gravity.CENTER
         )
 
-        addSpace(content, 25)
+        addGap(content, 24)
 
-        // حالة الاتصال
         val status = makePill("●  غير متصل", GREEN)
+
         content.addView(
             status,
             LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                -2,
+                -2
             ).apply {
                 gravity = Gravity.CENTER
             }
         )
 
-        addSpace(content, 18)
-
-        // زر الاتصال
-        val connectionButton = buildConnectionButton()
+        addGap(content, 18)
 
         content.addView(
-            connectionButton,
-            LinearLayout.LayoutParams(dp(160), dp(160)).apply {
+            buildConnectionButton(),
+            LinearLayout.LayoutParams(dp(165), dp(165)).apply {
                 gravity = Gravity.CENTER
             }
         )
 
-        addSpace(content, 12)
+        addGap(content, 12)
 
         addText(
             content,
-            "اضغط زر الاتصال لبدء التجربة",
-            13f,
-            MUTED,
+            "اضغط مطولاً ثم اسحب للأسفل لعرض التفاصيل",
+            12f,
+            CYAN,
             false,
             Gravity.CENTER
         )
 
-        addSpace(content, 25)
+        addGap(content, 24)
 
-        // لوحة الخادم
         content.addView(buildServerCard())
 
-        addSpace(content, 16)
+        addGap(content, 15)
 
-        // تلميح السحب
         dragHint = addText(
             content,
             "⌄  اسحب للأسفل لعرض بيانات الخادم والتفاصيل",
@@ -165,26 +152,30 @@ class MainActivity : Activity() {
             true,
             Gravity.CENTER
         ).apply {
-            setPadding(dp(8), dp(15), dp(8), dp(15))
-            isClickable = true
-            setOnClickListener { toggleDetails() }
+            setPadding(dp(8), dp(17), dp(8), dp(17))
+            setOnClickListener {
+                toggleDetails()
+            }
         }
 
         dragHint.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    downY = event.rawY
+                    startY = event.rawY
                     true
                 }
 
                 MotionEvent.ACTION_UP -> {
-                    val distance = event.rawY - downY
+                    val distance = event.rawY - startY
 
-                    when {
-                        distance > dp(30) -> showDetails()
-                        distance < -dp(30) -> hideDetails()
-                        abs(distance) < dp(10) -> toggleDetails()
+                    if (distance > dp(20)) {
+                        showDetails()
+                    } else if (distance < -dp(20)) {
+                        hideDetails()
+                    } else {
+                        toggleDetails()
                     }
+
                     true
                 }
 
@@ -192,10 +183,10 @@ class MainActivity : Activity() {
             }
         }
 
-        // تفاصيل الخادم والبيانات
-        detailsPanel = buildDetailsPanel().apply {
-            visibility = View.GONE
-        }
+        // تهيئة لوحة التفاصيل قبل إضافة بياناتها
+        detailsPanel = buildDetailsPanel()
+
+        detailsPanel.visibility = View.GONE
 
         content.addView(
             detailsPanel,
@@ -205,7 +196,7 @@ class MainActivity : Activity() {
             )
         )
 
-        addSpace(content, 12)
+        addGap(content, 15)
 
         addText(
             content,
@@ -217,8 +208,6 @@ class MainActivity : Activity() {
         )
     }
 
-    private var downY = 0f
-
     private fun buildHeader(): LinearLayout {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -228,7 +217,7 @@ class MainActivity : Activity() {
 
         val logo = TextView(this).apply {
             text = "و"
-            textSize = 27f
+            textSize = 28f
             gravity = Gravity.CENTER
             setTextColor(WHITE)
             typeface = Typeface.DEFAULT_BOLD
@@ -267,7 +256,8 @@ class MainActivity : Activity() {
             textSize = 25f
             gravity = Gravity.CENTER
             setTextColor(CYAN)
-            background = roundedBackground(CARD, Color.rgb(30, 67, 100), 15)
+            background = roundedBackground(CARD, 15)
+
             setOnClickListener {
                 showMessage("الإعدادات ستتم إضافتها لاحقاً")
             }
@@ -298,6 +288,7 @@ class MainActivity : Activity() {
         val inner = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
+
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(
@@ -310,37 +301,42 @@ class MainActivity : Activity() {
             }
         }
 
-        addText(
-            inner,
-            "⏻",
-            43f,
-            WHITE,
-            true,
-            Gravity.CENTER
-        )
-
-        addText(
-            inner,
-            "اتصال",
-            17f,
-            WHITE,
-            true,
-            Gravity.CENTER
-        )
+        addText(inner, "⏻", 43f, WHITE, true, Gravity.CENTER)
+        addText(inner, "اتصال", 17f, WHITE, true, Gravity.CENTER)
 
         outer.addView(
             inner,
             FrameLayout.LayoutParams(
-                dp(125),
-                dp(125),
+                dp(130),
+                dp(130),
                 Gravity.CENTER
             )
         )
 
-        outer.setOnClickListener {
-            showMessage(
-                "هذه واجهة التصميم حالياً. تفعيل VPN يحتاج خادماً حقيقياً وإعداداته."
-            )
+        // سحب زر الاتصال للأسفل يفتح التفاصيل
+        outer.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    startY = event.rawY
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    val distance = event.rawY - startY
+
+                    if (distance > dp(20)) {
+                        showDetails()
+                    } else {
+                        showMessage(
+                            "الاتصال الحقيقي ينتظر ربط خادم VPN"
+                        )
+                    }
+
+                    true
+                }
+
+                else -> true
+            }
         }
 
         return outer
@@ -370,7 +366,7 @@ class MainActivity : Activity() {
         heading.addView(makePill("تلقائي", CYAN))
 
         card.addView(heading)
-        addSpace(card, 17)
+        addGap(card, 17)
 
         addText(
             card,
@@ -380,11 +376,11 @@ class MainActivity : Activity() {
             true
         )
 
-        addSpace(card, 7)
+        addGap(card, 8)
 
         addText(
             card,
-            "سيتم اختيار الخادم الأفضل بعد إضافة الخوادم وإجراء اختبار الاستجابة.",
+            "سيتم اختيار أفضل خادم بعد اختبار الاستجابة والسرعة.",
             12f,
             MUTED
         )
@@ -403,35 +399,35 @@ class MainActivity : Activity() {
             true
         )
 
-        addSpace(card, 15)
+        addGap(card, 12)
 
-        addInfoRow("حالة الاتصال", "غير متصل")
+        addInfoRow(card, "حالة الاتصال", "غير متصل")
         addDivider(card)
 
-        addInfoRow("الخادم الحالي", "غير محدد")
+        addInfoRow(card, "الخادم الحالي", "غير محدد")
         addDivider(card)
 
-        addInfoRow("موقع الخادم", "بانتظار الخوادم")
+        addInfoRow(card, "موقع الخادم", "بانتظار الخوادم")
         addDivider(card)
 
-        addInfoRow("سرعة التحميل", "— Mbps")
+        addInfoRow(card, "سرعة التحميل", "— Mbps")
         addDivider(card)
 
-        addInfoRow("سرعة الرفع", "— Mbps")
+        addInfoRow(card, "سرعة الرفع", "— Mbps")
         addDivider(card)
 
-        addInfoRow("زمن الاستجابة Ping", "— ms")
+        addInfoRow(card, "زمن الاستجابة Ping", "— ms")
         addDivider(card)
 
-        addInfoRow("استهلاك البيانات", "0 MB")
+        addInfoRow(card, "استهلاك البيانات", "0 MB")
         addDivider(card)
 
-        addInfoRow("البروتوكول", "WireGuard")
+        addInfoRow(card, "البروتوكول", "WireGuard")
         addDivider(card)
 
-        addInfoRow("تقييم السرعة", "FAST بعد الاختبار")
+        addInfoRow(card, "تقييم السرعة", "FAST بعد الاختبار")
 
-        addSpace(card, 20)
+        addGap(card, 18)
 
         val testButton = TextView(this).apply {
             text = "اختبار سرعة الإنترنت"
@@ -440,10 +436,11 @@ class MainActivity : Activity() {
             setTextColor(WHITE)
             typeface = Typeface.DEFAULT_BOLD
             setPadding(dp(12), dp(15), dp(12), dp(15))
-            background = roundedBackground(BLUE, BLUE, 15)
+            background = roundedBackground(BLUE, 15)
+
             setOnClickListener {
                 showMessage(
-                    "اختبار السرعة الحقيقي سيتاح بعد تشغيل الاتصال بالخادم."
+                    "اختبار السرعة الحقيقي سيتاح بعد تشغيل الخادم."
                 )
             }
         }
@@ -456,11 +453,11 @@ class MainActivity : Activity() {
             )
         )
 
-        addSpace(card, 10)
+        addGap(card, 10)
 
         addText(
             card,
-            "ملاحظة: السرعة والخادم سيظهران من البيانات الحقيقية بعد ربط الخدمة.",
+            "البيانات الحقيقية ستظهر بعد ربط خدمة VPN.",
             11f,
             MUTED,
             false,
@@ -468,6 +465,42 @@ class MainActivity : Activity() {
         )
 
         return card
+    }
+
+    private fun addInfoRow(
+        parent: LinearLayout,
+        title: String,
+        value: String
+    ) {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(11), 0, dp(11))
+        }
+
+        val label = TextView(this).apply {
+            text = title
+            textSize = 13f
+            setTextColor(MUTED)
+        }
+
+        val result = TextView(this).apply {
+            text = value
+            textSize = 13f
+            setTextColor(WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.END
+        }
+
+        row.addView(
+            label,
+            LinearLayout.LayoutParams(0, -2, 1f)
+        )
+
+        row.addView(result)
+
+        parent.addView(row)
     }
 
     private fun buildBottomNavigation(): LinearLayout {
@@ -492,12 +525,15 @@ class MainActivity : Activity() {
                 textSize = 12f
                 gravity = Gravity.CENTER
                 setTextColor(if (index == 0) CYAN else MUTED)
+
                 setOnClickListener {
-                    if (index == 0) {
-                        showMessage("أنت في الصفحة الرئيسية")
-                    } else {
-                        showMessage("هذا القسم سيتم تفعيله لاحقاً")
-                    }
+                    showMessage(
+                        if (index == 0) {
+                            "أنت في الصفحة الرئيسية"
+                        } else {
+                            "هذا القسم سيتم تفعيله لاحقاً"
+                        }
+                    )
                 }
             }
 
@@ -510,53 +546,12 @@ class MainActivity : Activity() {
         return nav
     }
 
-    private fun addInfoRow(title: String, value: String) {
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutDirection = View.LAYOUT_DIRECTION_RTL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(11), 0, dp(11))
-        }
-
-        val left = TextView(this).apply {
-            text = title
-            textSize = 13f
-            setTextColor(MUTED)
-        }
-
-        val right = TextView(this).apply {
-            text = value
-            textSize = 13f
-            setTextColor(WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.END
-        }
-
-        row.addView(left, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(right)
-
-        detailsPanel.addView(row)
-    }
-
-    private fun addDivider(parent: LinearLayout) {
-        val divider = View(this).apply {
-            setBackgroundColor(Color.rgb(34, 58, 83))
-        }
-
-        parent.addView(
-            divider,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(1)
-            )
-        )
-    }
-
     private fun makeCard(): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setPadding(dp(17), dp(18), dp(17), dp(18))
+
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(
@@ -582,7 +577,6 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             background = roundedBackground(
                 Color.rgb(13, 43, 68),
-                Color.rgb(30, 100, 140),
                 30
             )
         }
@@ -590,13 +584,12 @@ class MainActivity : Activity() {
 
     private fun roundedBackground(
         fill: Int,
-        stroke: Int,
         radius: Int
     ): GradientDrawable {
         return GradientDrawable().apply {
             setColor(fill)
             cornerRadius = dp(radius).toFloat()
-            setStroke(dp(1), stroke)
+            setStroke(dp(1), Color.rgb(30, 100, 140))
         }
     }
 
@@ -625,13 +618,24 @@ class MainActivity : Activity() {
         return view
     }
 
-    private fun addSpace(parent: LinearLayout, height: Int) {
+    private fun addDivider(parent: LinearLayout) {
+        val divider = View(this).apply {
+            setBackgroundColor(Color.rgb(34, 58, 83))
+        }
+
+        parent.addView(
+            divider,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(1)
+            )
+        )
+    }
+
+    private fun addGap(parent: LinearLayout, height: Int) {
         parent.addView(
             View(this),
-            LinearLayout.LayoutParams(
-                1,
-                dp(height)
-            )
+            LinearLayout.LayoutParams(1, dp(height))
         )
     }
 
@@ -646,7 +650,7 @@ class MainActivity : Activity() {
     private fun showDetails() {
         detailsOpen = true
         detailsPanel.visibility = View.VISIBLE
-        dragHint.text = "⌃  اضغط هنا لإخفاء التفاصيل"
+        dragHint.text = "⌃  اضغط لإخفاء التفاصيل"
     }
 
     private fun hideDetails() {
@@ -664,6 +668,8 @@ class MainActivity : Activity() {
     }
 
     private fun dp(value: Int): Int {
-        return (value * resources.displayMetrics.density).toInt()
+        return (
+            value * resources.displayMetrics.density
+        ).toInt()
     }
 }
